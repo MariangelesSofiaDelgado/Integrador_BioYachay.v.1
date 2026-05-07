@@ -30,7 +30,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 });
+<<<<<<< Updated upstream:app/modulo/memoria/index.tsx
 import { StyleSheet, Text, View } from "react-native";
+=======
+>>>>>>> Stashed changes:app/modulo/memoria.tsx
 
 export default function ModuloMemoria() {
   return (
