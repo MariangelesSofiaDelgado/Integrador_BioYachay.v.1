@@ -1,19 +1,19 @@
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-export default function ModuloRazonamiento() {
+export default function ModuloVisoespacial() {
   const router = useRouter();
 
   return (
     <View style={styles.contenedor}>
-      <Text style={styles.titulo}>RAZONAMIENTO</Text>
-      <Text style={styles.descripcion}>Preparate para iniciar el juego de razonamiento.</Text>
+      <Text style={styles.titulo}>VISOESPACIAL</Text>
+      <Text style={styles.descripcion}>Aqui podras iniciar el juego del modulo Visoespacial.</Text>
 
       <View style={styles.espacioJuego}>
-        <Text style={styles.textoEspacio}>Aqui se mostrara la vista previa del juego.</Text>
+        <Text style={styles.textoEspacio}>Espacio previo del juego.</Text>
       </View>
 
-      <Pressable style={styles.botonIniciar} onPress={() => router.push("/modulo/razonamiento/juego")}>
+      <Pressable style={styles.botonIniciar} onPress={() => router.push("/modulo/visoespacial/juego")}>
         <Text style={styles.textoBoton}>Iniciar</Text>
       </Pressable>
     </View>
