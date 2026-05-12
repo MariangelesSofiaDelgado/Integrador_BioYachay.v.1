@@ -59,6 +59,7 @@ export default function AtencionJuego() {
     setObjetivoEmoji(objetivo);
   }, []);
 
+  
   // 🔹 Timer del juego - 60 segundos
   useEffect(() => {
     if (juegoTerminado) return;

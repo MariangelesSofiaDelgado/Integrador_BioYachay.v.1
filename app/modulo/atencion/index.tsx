@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import styles from "./styles/stylesindex";
 
+
 export default function ModuloAtencion() {
   const router = useRouter();
   const [dificultad, setDificultad] = useState("normal");
