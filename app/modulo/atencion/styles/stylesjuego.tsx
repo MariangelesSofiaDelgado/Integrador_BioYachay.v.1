@@ -165,4 +165,9 @@ export default StyleSheet.create({
     marginVertical: 15,
     alignItems: "center",
   },
+  objetivoGrande: {
+    fontSize: 60,
+    fontWeight: "bold",
+    marginVertical: 10,
+  },
 });

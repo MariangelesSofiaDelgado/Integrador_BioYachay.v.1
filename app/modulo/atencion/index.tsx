@@ -1,20 +1,47 @@
+import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import styles from "./styles/stylesindex";
 
-const frutas = ["🍎","🍊","🍌","🍇","🍐","🍉","🍓","🥝","🍍"];
-
 export default function ModuloAtencion() {
   const router = useRouter();
+  const [dificultad, setDificultad] = useState("normal");
+
+  // Mapear dificultad a cuadrícula
+  const getDificultadConfig = (diff: string) => {
+    switch (diff) {
+      case "facil":
+        return "3x3";
+      case "normal":
+        return "4x4";
+      case "dificil":
+        return "5x5";
+      default:
+        return "3x3";
+    }
+  };
+
+  const iniciarJuego = () => {
+    router.push({
+      pathname: "/modulo/atencion/juego",
+      params: {
+        dificultad,
+        cuadricula: getDificultadConfig(dificultad),
+      },
+    });
+  };
+
+  const frutas = ["🍎", "🍊", "🍌", "🍇", "🍐", "🍉", "🍓", "🥝", "🍍"];
 
   return (
     <View style={styles.contenedor}>
       <Text style={styles.titulo}>ATENCIÓN</Text>
       <Text style={styles.descripcion}>
-        Aquí podrás iniciar el juego del módulo de Atención.
+        Escoge la dificultad y comienza. Tienes 60 segundos para acumular la mayor cantidad de aciertos.
       </Text>
 
-      {/* Espacio de juego previo con 9 cartas */}
+      {/* Vista previa de cartas */}
       <View style={styles.espacioJuego}>
         <View style={styles.grid}>
           {frutas.map((fruta, index) => (
@@ -25,18 +52,34 @@ export default function ModuloAtencion() {
         </View>
       </View>
 
-      {/* Indicaciones simples */}
+      {/* Navbar con dificultad */}
+      <View style={styles.navbar}>
+        <View style={styles.opcion}>
+          <Text style={styles.label}>Dificultad:</Text>
+          <Picker
+            selectedValue={dificultad}
+            style={styles.picker}
+            onValueChange={(value) => setDificultad(value)}
+          >
+            <Picker.Item label="Fácil (3x3)" value="facil" />
+            <Picker.Item label="Normal (4x4)" value="normal" />
+            <Picker.Item label="Difícil (5x5)" value="dificil" />
+          </Picker>
+        </View>
+      </View>
+
+      {/* Tiempo total */}
+      <Text style={styles.tiempoInfo}>⏱️ Tiempo total: 60 segundos</Text>
+
+      {/* Indicaciones */}
       <View style={styles.indicaciones}>
-        <Text style={styles.indicacion}>👉 Debes encontrar la fruta indicada.</Text>
-        <Text style={styles.indicacion}>👉 Concéntrate y recuerda bien su posición.</Text>
-        <Text style={styles.indicacion}>👉 Tienes un tiempo limitado para responder.</Text>
+        <Text style={styles.indicacion}>👉 Haz clic en el objeto que se te indique.</Text>
+        <Text style={styles.indicacion}>👉 Completa rondas en 60 segundos.</Text>
+        <Text style={styles.indicacion}>👉 Sé rápido y preciso.</Text>
       </View>
 
       {/* Botón iniciar */}
-      <Pressable
-        style={styles.botonIniciar}
-        onPress={() => router.push("/modulo/atencion/juego")}
-      >
+      <Pressable style={styles.botonIniciar} onPress={iniciarJuego}>
         <Text style={styles.textoBoton}>Iniciar</Text>
       </Pressable>
     </View>

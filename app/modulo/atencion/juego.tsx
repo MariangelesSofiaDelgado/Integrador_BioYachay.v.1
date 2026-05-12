@@ -1,120 +1,161 @@
-import { Picker } from "@react-native-picker/picker";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import styles from "./../atencion/styles/stylesjuego";
 
-export default function AtencionJuego() {
-  const [cantidadObjetos, setCantidadObjetos] = useState(1);
-  const [cuadricula, setCuadricula] = useState("3x3");
-  const [tiempoMemorizar, setTiempoMemorizar] = useState(30);
-  const [tiempoJuego, setTiempoJuego] = useState(60);
-  const router = useRouter();
+const EMOJIS = [
+  "🍎", "🍊", "🍌", "🍇", "🍓", "🥝", "🍑", "🍒", "🍈", "🍍",
+  "🥭", "🍋", "🍏", "🥥", "🍐", "⚽", "🏀", "🎾", "🏐", "🎯",
+  "🎲", "🎮", "🎪", "🎨", "🎭", "🎸"
+];
 
-  // 🔹 Función que genera las cartas en blanco (solo "?")
-  const generarCartas = () => {
+interface Carta {
+  id: number;
+  emoji: string;
+}
+
+export default function AtencionJuego() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+
+  const cuadricula = Array.isArray(params.cuadricula) ? params.cuadricula[0] : (params.cuadricula || "4x4");
+  const TIEMPO_TOTAL = 60;
+
+  // Estados
+  const [cartas, setCartas] = useState<Carta[]>([]);
+  const [objetivoEmoji, setObjetivoEmoji] = useState("");
+  const [aciertos, setAciertos] = useState(0);
+  const [fallos, setFallos] = useState(0);
+  const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
+  const [juegoTerminado, setJuegoTerminado] = useState(false);
+
+  // 🔹 Generar nueva ronda
+  const generarRonda = (): { cartas: Carta[]; objetivo: string } => {
     const size = parseInt(cuadricula[0]);
     const total = size * size;
-    const cartas = [];
-    for (let i = 0; i < total; i++) {
-      cartas.push(
-        <View key={i} style={styles.carta}>
-          <Text style={styles.simbolo}>❓</Text>
-        </View>
-      );
+    const nuevasCartas: Carta[] = [];
+
+    // Shuffle emojis
+    const emojisBarajados = [...EMOJIS].sort(() => Math.random() - 0.5);
+
+    // Crear cartas
+    for (let i = 0; i < total && i < emojisBarajados.length; i++) {
+      nuevasCartas.push({
+        id: i,
+        emoji: emojisBarajados[i],
+      });
     }
-    return cartas;
+
+    // Elegir objetivo aleatoriamente de las cartas
+    const objetivoAleatorio = nuevasCartas[Math.floor(Math.random() * nuevasCartas.length)].emoji;
+
+    return { cartas: nuevasCartas, objetivo: objetivoAleatorio };
   };
 
-  // 🔹 Iniciar el juego - navega a iniciarjuego pasando parámetros
-  const iniciarJuego = () => {
-    router.push({
-      pathname: "/modulo/atencion/iniciarjuego",
-      params: {
-        cantidadObjetos: cantidadObjetos.toString(),
-        cuadricula,
-        tiempoMemorizar: tiempoMemorizar.toString(),
-        tiempoJuego: tiempoJuego.toString(),
-      },
-    });
+  // 🔹 Inicializar primer ronda
+  useEffect(() => {
+    const { cartas: nuevasCartas, objetivo } = generarRonda();
+    setCartas(nuevasCartas);
+    setObjetivoEmoji(objetivo);
+  }, []);
+
+  // 🔹 Timer del juego - 60 segundos
+  useEffect(() => {
+    if (juegoTerminado) return;
+
+    const timer = setInterval(() => {
+      setTiempoRestante((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setJuegoTerminado(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [juegoTerminado]);
+
+  // 🔹 Manejar clic en carta
+  const handleCartaPress = (emoji: string) => {
+    if (juegoTerminado) return;
+
+    if (emoji === objetivoEmoji) {
+      // ✅ Acierto - generar nueva ronda
+      setAciertos(aciertos + 1);
+      const { cartas: nuevasCartas, objetivo } = generarRonda();
+      setCartas(nuevasCartas);
+      setObjetivoEmoji(objetivo);
+    } else {
+      // ❌ Fallo
+      setFallos(fallos + 1);
+    }
   };
 
-  // 🔹 Ancho dinámico del grid según columnas
+  // 🔹 Pantalla de resumen
+  if (juegoTerminado) {
+    return (
+      <View style={styles.contenedor}>
+        <Text style={[styles.titulo, { color: "#2f5279" }]}>JUEGO TERMINADO</Text>
+
+        <View style={styles.resumenContainer}>
+          <Text style={styles.resumenTexto}>
+            Aciertos: <Text style={{ color: "#4CAF50", fontSize: 24, fontWeight: "bold" }}>{aciertos}</Text>
+          </Text>
+          <Text style={styles.resumenTexto}>
+            Fallos: <Text style={{ color: "#F44336", fontSize: 24, fontWeight: "bold" }}>{fallos}</Text>
+          </Text>
+          <Text style={styles.resumenTexto}>
+            Precisión: <Text style={{ color: "#2f5279", fontSize: 20, fontWeight: "bold" }}>
+              {aciertos + fallos > 0 ? Math.round((aciertos / (aciertos + fallos)) * 100) : 0}%
+            </Text>
+          </Text>
+        </View>
+
+        <Pressable style={styles.botonVolver} onPress={() => router.back()}>
+          <Text style={styles.textoBoton}>Volver</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   const size = parseInt(cuadricula[0]);
   const gridWidth = size * 70;
 
   return (
     <View style={styles.contenedor}>
       <Text style={styles.titulo}>JUEGO DE ATENCIÓN</Text>
-      <Text style={styles.descripcion}>
-        Configura las opciones antes de iniciar el juego.
+
+      {/* Información del juego */}
+      <View style={{ alignItems: "center", marginVertical: 10 }}>
+        <Text style={styles.instruccion}>Encuentra:</Text>
+        <Text style={styles.objetivoGrande}>{objetivoEmoji}</Text>
+      </View>
+
+      <Text style={styles.marcador}>
+        ✓ {aciertos} | ✗ {fallos} | ⏱️ {tiempoRestante}s
       </Text>
 
-      {/* Navbar con configuraciones */}
-      <View style={styles.navbar}>
-        <View style={styles.opcion}>
-          <Text style={styles.label}>Objetos:</Text>
-          <Picker
-            selectedValue={cantidadObjetos}
-            style={styles.picker}
-            onValueChange={(value) => setCantidadObjetos(value)}
+      {/* Grid de cartas visibles */}
+      <View style={[styles.grid, { width: gridWidth, marginTop: 20 }]}>
+        {cartas.map((carta) => (
+          <Pressable
+            key={carta.id}
+            style={styles.carta}
+            onPress={() => handleCartaPress(carta.emoji)}
           >
-            <Picker.Item label="1" value={1} />
-            <Picker.Item label="2" value={2} />
-            <Picker.Item label="3" value={3} />
-            <Picker.Item label="4" value={4} />
-            <Picker.Item label="5" value={5} />
-          </Picker>
-        </View>
-
-        <View style={styles.opcion}>
-          <Text style={styles.label}>Cuadrícula:</Text>
-          <Picker
-            selectedValue={cuadricula}
-            style={styles.picker}
-            onValueChange={(value) => setCuadricula(value)}
-          >
-            <Picker.Item label="3x3" value="3x3" />
-            <Picker.Item label="4x4" value="4x4" />
-            <Picker.Item label="5x5" value="5x5" />
-          </Picker>
-        </View>
-
-        <View style={styles.opcion}>
-          <Text style={styles.label}>Tiempo Memorizar:</Text>
-          <Picker
-            selectedValue={tiempoMemorizar}
-            style={styles.picker}
-            onValueChange={(value) => setTiempoMemorizar(value)}
-          >
-            <Picker.Item label="15 seg" value={15} />
-            <Picker.Item label="30 seg" value={30} />
-            <Picker.Item label="45 seg" value={45} />
-          </Picker>
-        </View>
-
-        <View style={styles.opcion}>
-          <Text style={styles.label}>Duración Juego:</Text>
-          <Picker
-            selectedValue={tiempoJuego}
-            style={styles.picker}
-            onValueChange={(value) => setTiempoJuego(value)}
-          >
-            <Picker.Item label="30 seg" value={30} />
-            <Picker.Item label="60 seg" value={60} />
-            <Picker.Item label="90 seg" value={90} />
-          </Picker>
-        </View>
+            <Text style={styles.simbolo}>{carta.emoji}</Text>
+          </Pressable>
+        ))}
       </View>
 
-      {/* Cartas con símbolo de ? */}
-      <View style={[styles.grid, { width: gridWidth }]}>
-        {generarCartas()}
-      </View>
-
-      {/* Botón Iniciar Juego */}
-      <Pressable style={styles.botonIniciar} onPress={iniciarJuego}>
-        <Text style={styles.textoBoton}>Iniciar Juego</Text>
+      {/* Botón para salir */}
+      <Pressable
+        style={styles.botonVolver}
+        onPress={() => setJuegoTerminado(true)}
+      >
+        <Text style={styles.textoBoton}>Finalizar</Text>
       </Pressable>
     </View>
   );

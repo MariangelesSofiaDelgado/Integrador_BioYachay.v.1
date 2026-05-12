@@ -59,12 +59,42 @@ export default StyleSheet.create({
     marginBottom: 6,
     color: "#333",
   },
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 15,
+  },
+  opcion: {
+    alignItems: "center",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  picker: {
+    height: 40,
+    width: 200,
+  },
+  tiempoInfo: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2f5279",
+    textAlign: "center",
+    marginVertical: 10,
+  },
   botonIniciar: {
     alignSelf: "center",
     backgroundColor: "#2f5279",
     paddingHorizontal: 28,
     paddingVertical: 12,
     borderRadius: 10,
+    marginTop: 15,
   },
   textoBoton: {
     color: "#ffffff",
