@@ -1,0 +1,168 @@
+import { StyleSheet } from "react-native";
+
+export default StyleSheet.create({
+  contenedor: {
+    flex: 1,
+    backgroundColor: "#ececec",
+    padding: 20,
+    justifyContent: "flex-start",
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#2f5279",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  descripcion: {
+    fontSize: 16,
+    color: "#4b4b4b",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 20,
+  },
+  opcion: {
+    flex: 1,
+    alignItems: "center",
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  picker: {
+    height: 40,
+    width: 100,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginBottom: 20,
+    alignSelf: "center",
+  },
+  carta: {
+    width: 60,
+    height: 60,
+    margin: 5,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  simbolo: {
+    fontSize: 28,
+  },
+  botonIniciar: {
+    alignSelf: "center",
+    backgroundColor: "#2f5279",
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  textoBoton: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  infoTiempo: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2f5279",
+    textAlign: "center",
+    marginVertical: 15,
+  },
+  instruccion: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  frutaBuscar: {
+    fontSize: 40,
+    fontWeight: "bold",
+  },
+  marcador: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2f5279",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  cartaMostrada: {
+    backgroundColor: "#e8f4f8",
+  },
+  cartaEncontrada: {
+    backgroundColor: "#4CAF50",
+    opacity: 0.7,
+  },
+  botonVolver: {
+    alignSelf: "center",
+    backgroundColor: "#666",
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  resumenContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    marginVertical: 20,
+    alignItems: "center",
+  },
+  resumenTexto: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  resumenNumero: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#2f5279",
+  },
+  frutasObjetivosRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    marginVertical: 10,
+  },
+  frutaObjetivo: {
+    fontSize: 32,
+    marginHorizontal: 5,
+    padding: 5,
+    opacity: 0.5,
+  },
+  frutaEncontrada: {
+    opacity: 1,
+  },
+  frutaBuscador: {
+    fontSize: 28,
+    marginHorizontal: 5,
+    padding: 8,
+    backgroundColor: "#fff3cd",
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "#ffc107",
+  },
+  frutaEncontradaBuscador: {
+    backgroundColor: "#d4edda",
+    borderColor: "#28a745",
+  },
+  objetivosContainer: {
+    marginVertical: 15,
+    alignItems: "center",
+  },
+});
