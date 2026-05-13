@@ -1,89 +1,156 @@
-import { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Pressable, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import styles from "./styles/stylesjuego";
 
-const COLORS = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#1A535C"];
+const CANTIDAD_NUMEROS = 6;
+const TIEMPO_TOTAL = 60;
 
-export default function RazonamientoJuego() {
-  const [sequence, setSequence] = useState<number[]>([]);
-  const [userSequence, setUserSequence] = useState<number[]>([]);
-  const [isDisplaying, setIsDisplaying] = useState(false);
-  const [activeButton, setActiveButton] = useState<number | null>(null);
+const generarNumeros = () =>
+  Array.from({ length: CANTIDAD_NUMEROS }, () => Math.floor(Math.random() * 9) + 1);
 
-  const startNewGame = () => {
-    const firstStep = Math.floor(Math.random() * 4);
-    setSequence([firstStep]);
-    setUserSequence([]);
-    playSequence([firstStep]);
+const generarObjetivo = (numeros: number[]) => {
+  const base = numeros[0] + numeros[1];
+  const extra = numeros.length > 2 && Math.random() > 0.5 ? numeros[2] : 0;
+  return base + extra;
+};
+
+export default function JuegoSuma() {
+  const router = useRouter();
+
+  const [numbers, setNumbers] = useState<number[]>([]);
+  const [target, setTarget] = useState(13);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [currentSum, setCurrentSum] = useState(0);
+  const [aciertos, setAciertos] = useState(0);
+  const [errores, setErrores] = useState(0);
+  const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
+  const [juegoTerminado, setJuegoTerminado] = useState(false);
+
+  const generarNuevaRonda = () => {
+    const nuevosNumeros = generarNumeros();
+    setNumbers(nuevosNumeros);
+    setTarget(generarObjetivo(nuevosNumeros));
+    setSelectedIndices([]);
+    setCurrentSum(0);
   };
 
-  const playSequence = async (targetSequence: number[]) => {
-    setIsDisplaying(true);
-    for (let i = 0; i < targetSequence.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setActiveButton(targetSequence[i]);
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setActiveButton(null);
-    }
-    setIsDisplaying(false);
-  };
+  useEffect(() => {
+    generarNuevaRonda();
+  }, []);
+
+  useEffect(() => {
+    if (juegoTerminado) return;
+
+    const timer = setInterval(() => {
+      setTiempoRestante((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setJuegoTerminado(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [juegoTerminado]);
 
   const handlePress = (index: number) => {
-    if (isDisplaying) return;
+    if (juegoTerminado) return;
 
-    const newUserSequence = [...userSequence, index];
-    setUserSequence(newUserSequence);
-
-    if (newUserSequence[newUserSequence.length - 1] !== sequence[newUserSequence.length - 1]) {
-      Alert.alert("Error", "Secuencia incorrecta. Intentalo de nuevo.", [
-        { text: "Reiniciar", onPress: startNewGame },
-      ]);
+    if (selectedIndices.includes(index)) {
+      setSelectedIndices((prev) => prev.filter((i) => i !== index));
+      setCurrentSum((prev) => prev - numbers[index]);
       return;
     }
 
-    if (newUserSequence.length === sequence.length) {
-      const nextStep = Math.floor(Math.random() * 4);
-      const nextSequence = [...sequence, nextStep];
-      setSequence(nextSequence);
-      setUserSequence([]);
-      setTimeout(() => playSequence(nextSequence), 1000);
+    const newSum = currentSum + numbers[index];
+    const nuevosSeleccionados = [...selectedIndices, index];
+
+    setSelectedIndices(nuevosSeleccionados);
+    setCurrentSum(newSum);
+
+    if (newSum === target) {
+      setAciertos((prev) => prev + 1);
+      generarNuevaRonda();
+      return;
+    }
+
+    if (newSum > target) {
+      setErrores((prev) => prev + 1);
+      setSelectedIndices([]);
+      setCurrentSum(0);
+      return;
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Razonamiento Logico</Text>
-      <Text style={styles.subtitle}>Nivel: {sequence.length}</Text>
+  if (juegoTerminado) {
+    return (
+      <View style={styles.contenedor}>
+        <Text style={[styles.titulo, { color: "#2f5279" }]}>JUEGO TERMINADO</Text>
 
-      <View style={styles.grid}>
-        {COLORS.map((color, index) => (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={0.7}
-            onPress={() => handlePress(index)}
-            style={[
-              styles.card,
-              {
-                backgroundColor: activeButton === index ? "#FFFFFF" : color,
-                opacity: isDisplaying ? 0.8 : 1,
-              },
-            ]}
-          />
-        ))}
+        <View style={styles.resumenContainer}>
+          <Text style={styles.resumenTexto}>
+            Aciertos: <Text style={{ color: "#4CAF50", fontSize: 24, fontWeight: "bold" }}>{aciertos}</Text>
+          </Text>
+          <Text style={styles.resumenTexto}>
+            Errores: <Text style={{ color: "#F44336", fontSize: 24, fontWeight: "bold" }}>{errores}</Text>
+          </Text>
+          <Text style={styles.resumenTexto}>
+            Precisión: <Text style={{ color: "#2f5279", fontSize: 20, fontWeight: "bold" }}>
+              {aciertos + errores > 0 ? Math.round((aciertos / (aciertos + errores)) * 100) : 0}%
+            </Text>
+          </Text>
+        </View>
+
+        <Pressable style={styles.botonVolver} onPress={() => router.replace("/modulo/razonamiento") }>
+          <Text style={styles.textoBoton}>Volver</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Suma Números</Text>
       </View>
 
-      <TouchableOpacity style={styles.startButton} onPress={startNewGame}>
-        <Text style={styles.buttonText}>{sequence.length > 0 ? "Reiniciar" : "Empezar"}</Text>
+      <View style={styles.targetContainer}>
+        <View style={styles.outerCircle}>
+          <View style={styles.innerCircle}>
+            <Text style={styles.targetText}>{target}</Text>
+          </View>
+        </View>
+      </View>
+
+      <Text style={styles.marcador}>
+        ✓ {aciertos} | ✗ {errores} | ⏱️ {tiempoRestante}s
+      </Text>
+
+      <View style={styles.grid}>
+        {numbers.map((num, index) => {
+          const seleccionado = selectedIndices.includes(index);
+
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.carta,
+                seleccionado && styles.selectedBox,
+              ]}
+              onPress={() => handlePress(index)}
+            >
+              <Text style={styles.simbolo}>{num}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <TouchableOpacity style={styles.botonIniciar} onPress={() => setJuegoTerminado(true)}>
+        <Text style={styles.textoBoton}>Finalizar</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F7F9FC" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 10, color: "#2D3436" },
-  subtitle: { fontSize: 18, marginBottom: 30, color: "#636E72" },
-  grid: { width: 300, height: 300, flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  card: { width: 145, height: 145, borderRadius: 20, elevation: 5 },
-  startButton: { marginTop: 40, backgroundColor: "#2D3436", paddingHorizontal: 40, paddingVertical: 15, borderRadius: 10 },
-  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
-});
