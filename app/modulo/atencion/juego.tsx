@@ -18,20 +18,41 @@ export default function AtencionJuego() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const cuadricula = Array.isArray(params.cuadricula) ? params.cuadricula[0] : (params.cuadricula || "4x4");
   const TIEMPO_TOTAL = 60;
 
+  // Función para obtener la dificultad basada en aciertos
+  const getDificultadPorAciertos = (aciertosCount: number): string => {
+    if (aciertosCount < 6) return "facil"; // 3x3
+    if (aciertosCount < 9) return "normal"; // 4x4
+    if (aciertosCount < 12) return "dificil"; // 5x5
+    return "dificil"; // Máximo nivel
+  };
+
+  const getCuadriculaPorDificultad = (dificultad: string): string => {
+    switch (dificultad) {
+      case "facil":
+        return "3x3";
+      case "normal":
+        return "4x4";
+      case "dificil":
+        return "5x5";
+      default:
+        return "3x3";
+    }
+  };
+
   // Estados
-  const [cartas, setCartas] = useState<Carta[]>([]);
-  const [objetivoEmoji, setObjetivoEmoji] = useState("");
   const [aciertos, setAciertos] = useState(0);
   const [fallos, setFallos] = useState(0);
   const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
   const [juegoTerminado, setJuegoTerminado] = useState(false);
+  const [cartas, setCartas] = useState<Carta[]>([]);
+  const [objetivoEmoji, setObjetivoEmoji] = useState("");
+  const [cuadricula, setCuadricula] = useState("3x3");
 
   // 🔹 Generar nueva ronda
-  const generarRonda = (): { cartas: Carta[]; objetivo: string } => {
-    const size = parseInt(cuadricula[0]);
+  const generarRonda = (gridSize: string = cuadricula): { cartas: Carta[]; objetivo: string } => {
+    const size = parseInt(gridSize[0]);
     const total = size * size;
     const nuevasCartas: Carta[] = [];
 
@@ -54,10 +75,10 @@ export default function AtencionJuego() {
 
   // 🔹 Inicializar primer ronda
   useEffect(() => {
-    const { cartas: nuevasCartas, objetivo } = generarRonda();
+    const { cartas: nuevasCartas, objetivo } = generarRonda(cuadricula);
     setCartas(nuevasCartas);
     setObjetivoEmoji(objetivo);
-  }, []);
+  }, [cuadricula]);
 
   
   // 🔹 Timer del juego - 60 segundos
@@ -83,11 +104,26 @@ export default function AtencionJuego() {
     if (juegoTerminado) return;
 
     if (emoji === objetivoEmoji) {
-      // ✅ Acierto - generar nueva ronda
-      setAciertos(aciertos + 1);
-      const { cartas: nuevasCartas, objetivo } = generarRonda();
-      setCartas(nuevasCartas);
-      setObjetivoEmoji(objetivo);
+      // ✅ Acierto - actualizar aciertos
+      const nuevoAciertos = aciertos + 1;
+      setAciertos(nuevoAciertos);
+
+      // Verificar si cambia la dificultad
+      const dificultadActual = getDificultadPorAciertos(aciertos);
+      const nuevaDificultad = getDificultadPorAciertos(nuevoAciertos);
+
+      // Generar nueva ronda con la nueva dificultad si cambió
+      if (dificultadActual !== nuevaDificultad) {
+        const nuevaCuadricula = getCuadriculaPorDificultad(nuevaDificultad);
+        setCuadricula(nuevaCuadricula);
+        const { cartas: nuevasCartas, objetivo } = generarRonda(nuevaCuadricula);
+        setCartas(nuevasCartas);
+        setObjetivoEmoji(objetivo);
+      } else {
+        const { cartas: nuevasCartas, objetivo } = generarRonda();
+        setCartas(nuevasCartas);
+        setObjetivoEmoji(objetivo);
+      }
     } else {
       // ❌ Fallo
       setFallos(fallos + 1);
