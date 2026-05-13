@@ -1,48 +1,120 @@
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Pressable, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import styles from "./styles/stylesjuego";
+
+const CANTIDAD_NUMEROS = 6;
+const TIEMPO_TOTAL = 60;
+
+const generarNumeros = () =>
+  Array.from({ length: CANTIDAD_NUMEROS }, () => Math.floor(Math.random() * 9) + 1);
+
+const generarObjetivo = (numeros: number[]) => {
+  const base = numeros[0] + numeros[1];
+  const extra = numeros.length > 2 && Math.random() > 0.5 ? numeros[2] : 0;
+  return base + extra;
+};
 
 export default function JuegoSuma() {
+  const router = useRouter();
+
+  const [numbers, setNumbers] = useState<number[]>([]);
   const [target, setTarget] = useState(13);
-  const [numbers, setNumbers] = useState([8, 7, 9, 2, 5, 1]);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [currentSum, setCurrentSum] = useState(0);
+  const [aciertos, setAciertos] = useState(0);
+  const [errores, setErrores] = useState(0);
+  const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
+  const [juegoTerminado, setJuegoTerminado] = useState(false);
 
-  const handlePress = (index: number) => {
-    if (selectedIndices.includes(index)) {
-      // Deseleccionar
-      setSelectedIndices(prev => prev.filter(i => i !== index));
-      setCurrentSum(prev => prev - numbers[index]);
-    } else {
-      // Seleccionar
-      const newSum = currentSum + numbers[index];
-      setSelectedIndices(prev => [...prev, index]);
-      setCurrentSum(newSum);
-
-      if (newSum === target) {
-        alert("¡Correcto!");
-        generateNewRound();
-      } else if (newSum > target) {
-        alert("Te pasaste, intenta de nuevo");
-        setSelectedIndices([]);
-        setCurrentSum(0);
-      }
-    }
-  };
-
-  const generateNewRound = () => {
-    const newNums = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10) + 1);
-    setNumbers(newNums);
-    const randomTarget = newNums[0] + newNums[1] + (Math.random() > 0.5 ? newNums[2] : 0);
-    setTarget(randomTarget);
+  const generarNuevaRonda = () => {
+    const nuevosNumeros = generarNumeros();
+    setNumbers(nuevosNumeros);
+    setTarget(generarObjetivo(nuevosNumeros));
     setSelectedIndices([]);
     setCurrentSum(0);
   };
+
+  useEffect(() => {
+    generarNuevaRonda();
+  }, []);
+
+  useEffect(() => {
+    if (juegoTerminado) return;
+
+    const timer = setInterval(() => {
+      setTiempoRestante((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setJuegoTerminado(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [juegoTerminado]);
+
+  const handlePress = (index: number) => {
+    if (juegoTerminado) return;
+
+    if (selectedIndices.includes(index)) {
+      setSelectedIndices((prev) => prev.filter((i) => i !== index));
+      setCurrentSum((prev) => prev - numbers[index]);
+      return;
+    }
+
+    const newSum = currentSum + numbers[index];
+    const nuevosSeleccionados = [...selectedIndices, index];
+
+    setSelectedIndices(nuevosSeleccionados);
+    setCurrentSum(newSum);
+
+    if (newSum === target) {
+      setAciertos((prev) => prev + 1);
+      generarNuevaRonda();
+      return;
+    }
+
+    if (newSum > target) {
+      setErrores((prev) => prev + 1);
+      setSelectedIndices([]);
+      setCurrentSum(0);
+      return;
+    }
+  };
+
+  if (juegoTerminado) {
+    return (
+      <View style={styles.contenedor}>
+        <Text style={[styles.titulo, { color: "#2f5279" }]}>JUEGO TERMINADO</Text>
+
+        <View style={styles.resumenContainer}>
+          <Text style={styles.resumenTexto}>
+            Aciertos: <Text style={{ color: "#4CAF50", fontSize: 24, fontWeight: "bold" }}>{aciertos}</Text>
+          </Text>
+          <Text style={styles.resumenTexto}>
+            Errores: <Text style={{ color: "#F44336", fontSize: 24, fontWeight: "bold" }}>{errores}</Text>
+          </Text>
+          <Text style={styles.resumenTexto}>
+            Precisión: <Text style={{ color: "#2f5279", fontSize: 20, fontWeight: "bold" }}>
+              {aciertos + errores > 0 ? Math.round((aciertos / (aciertos + errores)) * 100) : 0}%
+            </Text>
+          </Text>
+        </View>
+
+        <Pressable style={styles.botonVolver} onPress={() => router.replace("/modulo/razonamiento") }>
+          <Text style={styles.textoBoton}>Volver</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Suma Números</Text>
-        <TouchableOpacity style={styles.pauseBtn}><Text>⏸</Text></TouchableOpacity>
       </View>
 
       <View style={styles.targetContainer}>
@@ -53,38 +125,32 @@ export default function JuegoSuma() {
         </View>
       </View>
 
+      <Text style={styles.marcador}>
+        ✓ {aciertos} | ✗ {errores} | ⏱️ {tiempoRestante}s
+      </Text>
+
       <View style={styles.grid}>
-        {numbers.map((num, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.numberBox,
-              selectedIndices.includes(index) && styles.selectedBox
-            ]}
-            onPress={() => handlePress(index)}
-          >
-            <Text style={[styles.numText, selectedIndices.includes(index) && styles.selectedText]}>
-              {num}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {numbers.map((num, index) => {
+          const seleccionado = selectedIndices.includes(index);
+
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.carta,
+                seleccionado && styles.selectedBox,
+              ]}
+              onPress={() => handlePress(index)}
+            >
+              <Text style={styles.simbolo}>{num}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
+
+      <TouchableOpacity style={styles.botonIniciar} onPress={() => setJuegoTerminado(true)}>
+        <Text style={styles.textoBoton}>Finalizar</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E1F5FE' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, alignItems: 'center' },
-  headerText: { fontSize: 18, fontWeight: 'bold' },
-  pauseBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#4A90E2', justifyContent: 'center', alignItems: 'center' },
-  targetContainer: { alignItems: 'center', marginVertical: 50 },
-  outerCircle: { width: 180, height: 180, borderRadius: 90, backgroundColor: '#7B92FF', justifyContent: 'center', alignItems: 'center' },
-  innerCircle: { width: 140, height: 140, borderRadius: 70, backgroundColor: '#4A90E2', justifyContent: 'center', alignItems: 'center', borderWidth: 5, borderColor: '#81D4FA' },
-  targetText: { fontSize: 60, color: 'white', fontWeight: 'bold' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15, padding: 20 },
-  numberBox: { width: 80, height: 80, backgroundColor: 'white', borderRadius: 15, justifyContent: 'center', alignItems: 'center', elevation: 5 },
-  selectedBox: { backgroundColor: '#4A90E2' },
-  numText: { fontSize: 32, fontWeight: 'bold', color: '#333' },
-  selectedText: { color: 'white' }
-});
