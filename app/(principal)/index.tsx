@@ -67,10 +67,6 @@ export default function Index() {
             style={styles.tarjeta}
             onPress={() => router.push(modulo.ruta)}
           >
-            {/*
-              Imagen del modulo (se agregara despues)
-              <Image source={require("../assets/images/memoria.png")} style={styles.imagenModulo} />
-            */}
             <MaterialCommunityIcons name={modulo.icono} size={38} color={modulo.color} />
             <Text style={styles.tarjetaTitulo}>{modulo.nombre}</Text>
             <View style={[styles.lineaColor, { backgroundColor: modulo.color }]} />
@@ -97,9 +93,9 @@ const styles = StyleSheet.create({
   },
   titulo: {
     textAlign: "center",
-    fontSize: 24,
+    fontSize: 30,
     lineHeight: 28,
-    color: "#163c68",
+    color: "#0a5f64",
     fontWeight: "700",
     marginBottom: 10,
   },

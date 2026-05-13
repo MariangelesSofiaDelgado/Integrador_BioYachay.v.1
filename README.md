@@ -16,35 +16,48 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+# 1. Clonar el repositorio oficial
+git clone https://github.com/MariangelesSofiaDelgado/Integrador_BioYachay.v.1.git
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+# 2. Entrar a la carpeta del proyecto
+cd Integrador_BioYachay.v.1
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+# 3. Activa TU rama personal (USA SOLO LA QUE TE CORRESPONDA)
+git checkout zahid     # Si eres Zahid
+git checkout selena    # Si eres Selena
+git checkout valentino # Si eres Valentino
 
-## Get a fresh project
 
-When you're ready, run:
+----------------------------------------------------------------
+GUARDAR Y SUBIR PROYECTO
+----------------------------------------------------------------
+# 1. Seleccionar todos tus archivos modificados
+git add .
 
-```bash
-npm run reset-project
-```
+# 2. Guardar con un mensaje de lo que hiciste
+git commit -m "Explica aquí qué parte del código avanzaste"
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# 3. Enviar a GitHub (USA TU PROPIO NOMBRE)
+git push origin tu-nombre
 
-## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
+------------------------------------------------------------------
+SINCRONIZACIÓN
+------------------------------------------------------------------
+# 1. Avisarle a tu Git que busque cambios en internet
+git fetch --all
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# 2. Traer lo nuevo del proyecto base a tu rama personal
+git merge origin/proyecto
 
-## Join the community
+#git merge algun compañero
+git merge origin/nombre compañero
 
-Join our community of developers creating universal apps.
+🛑 Reglas de Oro (Prohibido):
+❌ NO usar git init: El proyecto ya está creado.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+❌ NO borrar la carpeta .git: Si la borras, pierdes la conexión con GitHub.
+
+❌ NO subir nada directo a la rama main o proyecto: Todo se sube primero a tu rama personal y luego Sofía lo unirá.
+
+⚠️ Librerías: Si instalas algo nuevo (npm), avisa al grupo para que todos ejecuten npm install.
