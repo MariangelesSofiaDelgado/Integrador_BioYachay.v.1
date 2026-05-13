@@ -1,91 +1,90 @@
-import { useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C'];
-
-const Razonamiento = () => {
-  const [sequence, setSequence] = useState<number[]>([]);
-  const [userSequence, setUserSequence] = useState<number[]>([]);
-  const [isDisplaying, setIsDisplaying] = useState(false);
-  const [activeButton, setActiveButton] = useState<number | null>(null);
-
-  // Iniciar el juego
-  const startNewGame = () => {
-    const firstStep = Math.floor(Math.random() * 4);
-    setSequence([firstStep]);
-    setUserSequence([]);
-    playSequence([firstStep]);
-  };
-
-  // Mostrar la secuencia al usuario
-  const playSequence = async (targetSequence: number[]) => {
-    setIsDisplaying(true);
-    for (let i = 0; i < targetSequence.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      setActiveButton(targetSequence[i]);
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setActiveButton(null);
-    }
-    setIsDisplaying(false);
-  };
+export default function JuegoSuma() {
+  const [target, setTarget] = useState(13);
+  const [numbers, setNumbers] = useState([8, 7, 9, 2, 5, 1]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [currentSum, setCurrentSum] = useState(0);
 
   const handlePress = (index: number) => {
-    if (isDisplaying) return;
+    if (selectedIndices.includes(index)) {
+      // Deseleccionar
+      setSelectedIndices(prev => prev.filter(i => i !== index));
+      setCurrentSum(prev => prev - numbers[index]);
+    } else {
+      // Seleccionar
+      const newSum = currentSum + numbers[index];
+      setSelectedIndices(prev => [...prev, index]);
+      setCurrentSum(newSum);
 
-    const newUserSequence = [...userSequence, index];
-    setUserSequence(newUserSequence);
-
-    // Verificar si se equivocó
-    if (newUserSequence[newUserSequence.length - 1] !== sequence[newUserSequence.length - 1]) {
-      Alert.alert("¡Error!", "Secuencia incorrecta. Inténtalo de nuevo.", [{ text: "Reiniciar", onPress: startNewGame }]);
-      return;
+      if (newSum === target) {
+        alert("¡Correcto!");
+        generateNewRound();
+      } else if (newSum > target) {
+        alert("Te pasaste, intenta de nuevo");
+        setSelectedIndices([]);
+        setCurrentSum(0);
+      }
     }
+  };
 
-    // Si completó la secuencia actual
-    if (newUserSequence.length === sequence.length) {
-      const nextStep = Math.floor(Math.random() * 4);
-      const nextSequence = [...sequence, nextStep];
-      setSequence(nextSequence);
-      setUserSequence([]);
-      setTimeout(() => playSequence(nextSequence), 1000);
-    }
+  const generateNewRound = () => {
+    const newNums = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10) + 1);
+    setNumbers(newNums);
+    const randomTarget = newNums[0] + newNums[1] + (Math.random() > 0.5 ? newNums[2] : 0);
+    setTarget(randomTarget);
+    setSelectedIndices([]);
+    setCurrentSum(0);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Razonamiento Lógico</Text>
-      <Text style={styles.subtitle}>Nivel: {sequence.length}</Text>
-      
-      <View style={styles.grid}>
-        {COLORS.map((color, index) => (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={0.7}
-            onPress={() => handlePress(index)}
-            style={[
-              styles.card,
-              { backgroundColor: activeButton === index ? '#FFFFFF' : color, 
-                opacity: isDisplaying ? 0.8 : 1 }
-            ]}
-          />
-        ))}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Suma Números</Text>
+        <TouchableOpacity style={styles.pauseBtn}><Text>⏸</Text></TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.startButton} onPress={startNewGame}>
-        <Text style={styles.buttonText}>{sequence.length > 0 ? 'Reiniciar' : 'Empezar'}</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.targetContainer}>
+        <View style={styles.outerCircle}>
+          <View style={styles.innerCircle}>
+            <Text style={styles.targetText}>{target}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.grid}>
+        {numbers.map((num, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.numberBox,
+              selectedIndices.includes(index) && styles.selectedBox
+            ]}
+            onPress={() => handlePress(index)}
+          >
+            <Text style={[styles.numText, selectedIndices.includes(index) && styles.selectedText]}>
+              {num}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F9FC' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#2D3436' },
-  subtitle: { fontSize: 18, marginBottom: 30, color: '#636E72' },
-  grid: { width: 300, height: 300, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  card: { width: 145, height: 145, borderRadius: 20, elevation: 5 },
-  startButton: { marginTop: 40, backgroundColor: '#2D3436', paddingHorizontal: 40, paddingVertical: 15, borderRadius: 10 },
-  buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 }
+  container: { flex: 1, backgroundColor: '#E1F5FE' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, alignItems: 'center' },
+  headerText: { fontSize: 18, fontWeight: 'bold' },
+  pauseBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#4A90E2', justifyContent: 'center', alignItems: 'center' },
+  targetContainer: { alignItems: 'center', marginVertical: 50 },
+  outerCircle: { width: 180, height: 180, borderRadius: 90, backgroundColor: '#7B92FF', justifyContent: 'center', alignItems: 'center' },
+  innerCircle: { width: 140, height: 140, borderRadius: 70, backgroundColor: '#4A90E2', justifyContent: 'center', alignItems: 'center', borderWidth: 5, borderColor: '#81D4FA' },
+  targetText: { fontSize: 60, color: 'white', fontWeight: 'bold' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15, padding: 20 },
+  numberBox: { width: 80, height: 80, backgroundColor: 'white', borderRadius: 15, justifyContent: 'center', alignItems: 'center', elevation: 5 },
+  selectedBox: { backgroundColor: '#4A90E2' },
+  numText: { fontSize: 32, fontWeight: 'bold', color: '#333' },
+  selectedText: { color: 'white' }
 });
-
-export default Razonamiento;
