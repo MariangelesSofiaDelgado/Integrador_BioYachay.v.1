@@ -42,18 +42,18 @@ export default function JuegoSuma() {
   }));
 
   const generarNuevaRonda = () => {
-  // 1. Primero generamos y ordenamos los números
+  // 1. genera y ordenamos los números
   const nuevosNumeros = generarNumeros().sort((a, b) => a - b);
   
-  // 2. Elegimos 2 o 3 números ALEATORIOS de esa lista para crear el objetivo
-  // Esto garantiza que la suma SIEMPRE exista en el tablero
+  // 2. Elige 2 o 3 números ALEATORIOS de esa lista para crear el objetivo
+
   const indice1 = Math.floor(Math.random() * nuevosNumeros.length);
   let indice2 = Math.floor(Math.random() * nuevosNumeros.length);
   while (indice2 === indice1) indice2 = Math.floor(Math.random() * nuevosNumeros.length);
   
   let sumaSegura = nuevosNumeros[indice1] + nuevosNumeros[indice2];
   
-  // Opcional: sumar un tercero para variar
+ 
   if (Math.random() > 0.5) {
     let indice3 = Math.floor(Math.random() * nuevosNumeros.length);
     if (indice3 !== indice1 && indice3 !== indice2) {
@@ -62,7 +62,7 @@ export default function JuegoSuma() {
   }
 
   setNumbers(nuevosNumeros);
-  setTarget(sumaSegura); // Ahora el target siempre es una combinación posible
+  setTarget(sumaSegura); 
   setSelectedIndices([]);
   setCurrentSum(0);
 };
@@ -100,12 +100,12 @@ export default function JuegoSuma() {
 
     if (newSum === target) {
       setAciertos((prev) => prev + 1);
-      setTimeout(generarNuevaRonda, 300); // Pequeño delay para ver la suma
+      setTimeout(generarNuevaRonda, 300); 
       return;
     }
 
     if (newSum > target) {
-      // Animación de ERROR (Vibración)
+    
       shakeX.value = withSequence(
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),
@@ -120,7 +120,7 @@ export default function JuegoSuma() {
     }
   };
 
-  // Pantalla de resultados (Mantén tu código actual aquí...)
+  
   if (juegoTerminado) {
     return (
       <View style={styles.contenedor}>
@@ -146,7 +146,7 @@ export default function JuegoSuma() {
               <Text style={styles.targetText}>{target}</Text>
             </View>
           </Animated.View>
-          {/* Muestra la suma actual debajo del círculo */}
+          
           <Text style={{fontSize: 20, color: '#3D7EB7', marginTop: 10, fontWeight: 'bold'}}>
             Suma actual: {currentSum}
           </Text>
@@ -178,7 +178,7 @@ export default function JuegoSuma() {
   );
 }
 
-// Componente para la ficha con animación individual
+
 function FichaAnimada({ num, seleccionado, onPress }: any) {
   const scale = useSharedValue(1);
 
