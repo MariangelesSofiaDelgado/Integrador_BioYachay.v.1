@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
+import styles from './styles/stylesjuego';
 
 interface Carta {
   id: number;
@@ -8,6 +9,14 @@ interface Carta {
   volteada: boolean;
   encontrada: boolean;
 }
+
+const CONFIG_CARTAS = {
+  facil: 8,
+  normal: 12,
+  dificil: 20,
+} as const;
+
+const FRUTAS = ["🍎", "🍌", "🍇", "🍊", "🍓", "🍍", "🥥", "🥝", "🍉", "🍒"];
 
 export default function PantallaJuego() {
   const { nivel, mazo, tiempo } = useLocalSearchParams();
@@ -18,6 +27,8 @@ export default function PantallaJuego() {
   const [memorizando, setMemorizando] = useState(true);
   const [contadorMemo, setContadorMemo] = useState(5);
   const [segundos, setSegundos] = useState(Number(tiempo) || 60);
+  const [nivelActual, setNivelActual] = useState<string>((nivel as string) || 'normal');
+  const [pares, setPares] = useState<number>(6); // 6 pares => 4x3 (12 cartas)
   
   // Estos NO se reinician al completar el tablero, solo al dar "Reintentar"
   const [aciertos, setAciertos] = useState(0);
@@ -30,8 +41,36 @@ export default function PantallaJuego() {
   useEffect(() => { fallosRef.current = fallos; }, [fallos]);
 
   // --- FUNCIÓN SOLO PARA GENERAR NUEVO TABLERO (Sin tocar marcador) ---
-  const mezclarYGenerarTablero = useCallback((mazoJson: string) => {
-    const frutas = JSON.parse(mazoJson);
+  const generarMazoPorNivel = useCallback((nivelKey: keyof typeof CONFIG_CARTAS) => {
+    const cantidadTotal = CONFIG_CARTAS[nivelKey];
+    const seleccion = FRUTAS.slice(0, cantidadTotal / 2);
+    const pares = [...seleccion, ...seleccion];
+    // barajar
+    for (let i = pares.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pares[i], pares[j]] = [pares[j], pares[i]];
+    }
+    return pares;
+  }, []);
+
+  const mezclarYGenerarTablero = useCallback((mazoJson?: string, nivelKey?: keyof typeof CONFIG_CARTAS) => {
+    let frutas: string[] = [];
+    if (mazoJson) {
+      try { frutas = JSON.parse(mazoJson); } catch { frutas = []; }
+    }
+    if ((!frutas || frutas.length === 0) && nivelKey) {
+      frutas = generarMazoPorNivel(nivelKey);
+    }
+    // si aún no hay frutas, fallback a nivelActual
+    if ((!frutas || frutas.length === 0)) {
+      // generar por pares actuales
+      const seleccion = FRUTAS.slice(0, pares);
+      frutas = [...seleccion, ...seleccion];
+      for (let i = frutas.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [frutas[i], frutas[j]] = [frutas[j], frutas[i]];
+      }
+    }
     const mazoMezclado = [...frutas].sort(() => Math.random() - 0.5);
     const nuevoTablero = mazoMezclado.map((fruta: string) => ({
       id: Math.random(), 
@@ -43,12 +82,15 @@ export default function PantallaJuego() {
     setMemorizando(true);
     setContadorMemo(5);
     setSeleccionadas([]);
-  }, []);
+  }, [generarMazoPorNivel, nivelActual]);
 
   // --- AL INICIAR POR PRIMERA VEZ ---
   useEffect(() => {
     if (mazo) mezclarYGenerarTablero(mazo as string);
+    else mezclarYGenerarTablero(undefined, undefined);
   }, [mazo, mezclarYGenerarTablero]);
+
+
 
   // --- FINALIZAR PARTIDA ---
   const finalizarJuego = useCallback(() => {
@@ -121,6 +163,7 @@ export default function PantallaJuego() {
           return n;
         });
         setSeleccionadas([]);
+        // (sin cambios automáticos de dificultad)
       } else {
         setFallos(f => f + 1);
         setTimeout(() => {
@@ -136,14 +179,14 @@ export default function PantallaJuego() {
     }
   }, [seleccionadas, tablero]);
 
-  // --- CAMBIO AQUÍ: Al completar ronda, NO reinicia aciertos/fallos ---
+  // --- Al completar ronda, regenerar tablero ---
   useEffect(() => {
     if (tablero.length > 0 && tablero.every(c => c.encontrada)) {
-      setTimeout(() => { 
-        if (mazo) mezclarYGenerarTablero(mazo as string); 
+      setTimeout(() => {
+        mezclarYGenerarTablero(undefined, undefined);
       }, 800);
     }
-  }, [tablero, mazo, mezclarYGenerarTablero]);
+  }, [tablero, mezclarYGenerarTablero]);
 
   return (
     <View style={styles.container}>
@@ -158,32 +201,26 @@ export default function PantallaJuego() {
           <Text style={styles.textoBanner}>Memoriza en: {contadorMemo}s</Text>
         </View>
       )}
-      <View style={[styles.grid, { width: nivel === 'dificil' ? 350 : 280 }]}>
-        {tablero.map((carta, i) => (
-          <Pressable 
-            key={carta.id} 
-            style={[styles.carta, (carta.volteada || carta.encontrada) && styles.cartaActiva]} 
-            onPress={() => manejarClick(i)}
-          >
-            <Text style={styles.textoCarta}>{carta.volteada || carta.encontrada ? carta.contenido : "?"}</Text>
-          </Pressable>
-        ))}
-      </View>
+      {/* Calcular ancho del grid según número de cartas para respetar 3x2 inicial */}
+      {(() => {
+        const totalCards = tablero.length > 0 ? tablero.length : pares * 2;
+        const columns = Math.min(5, Math.max(2, Math.ceil(Math.sqrt(totalCards))));
+        const gridWidth = columns * 70; // aproximado: carta width + margins
+        return (
+          <View style={[styles.grid, { width: gridWidth, marginTop: 20 }]}>
+            {tablero.map((carta, i) => (
+              <Pressable 
+                key={carta.id} 
+                style={[styles.carta, (carta.volteada || carta.encontrada) && styles.cartaActiva]} 
+                onPress={() => manejarClick(i)}
+              >
+                <Text style={styles.textoCarta}>{carta.volteada || carta.encontrada ? carta.contenido : "?"}</Text>
+              </Pressable>
+            ))}
+          </View>
+        );
+      })()}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ececec", alignItems: 'center', paddingTop: 40 },
-  tituloGrande: { fontSize: 24, fontWeight: "900", color: "#2f5279", marginBottom: 20, textAlign: 'center' },
-  headerStats: { flexDirection: 'row', justifyContent: 'space-around', width: '90%', backgroundColor: '#fff', padding: 15, borderRadius: 20, marginBottom: 20, elevation: 5 },
-  statBox: { alignItems: 'center' },
-  statLabel: { fontSize: 10, fontWeight: 'bold', color: '#7f8c8d' },
-  statValue: { fontSize: 20, fontWeight: '900', color: '#2f5279' },
-  bannerMemo: { backgroundColor: '#e67e22', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 12, marginBottom: 15 },
-  textoBanner: { color: '#fff', fontWeight: 'bold' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  carta: { width: 55, height: 75, margin: 5, backgroundColor: "#2f5279", justifyContent: 'center', alignItems: 'center', borderRadius: 10 },
-  cartaActiva: { backgroundColor: "#fff", borderWidth: 2, borderColor: "#2f5279" },
-  textoCarta: { fontSize: 28 }
-});

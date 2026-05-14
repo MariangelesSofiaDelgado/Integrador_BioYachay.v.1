@@ -37,6 +37,9 @@ export default function ModuloMemoria() {
     return pares;
   }, [dificultad]);
 
+  // Vista previa fija 3x3 (solo visual)
+  const previa3x3 = FRUTAS.slice(0, 9);
+
  // Calcula el ancho máximo para forzar las filas deseadas
   const obtenerAnchoMaximo = () => {
     if (dificultad === 'facil') return 210;  // 4 cartas por fila -> 2 filas
@@ -49,69 +52,50 @@ export default function ModuloMemoria() {
   };
 
   return (
-    <View style={styles.contenedor}>
-      {/* --- Encabezado --- */}
-      <View style={styles.navbar}>
-        <View style={styles.bloqueTitulos}>
-          <Text style={styles.headerTitulo}>JUEGO DE MEMORIA</Text>
-          <Text style={styles.headerSubtitulo}>Encuentra todos los pares</Text>
-        </View>
-        
-        <View style={styles.contenedorDificultad}>
-          {NIVELES.map((nivel) => (
-            <Pressable
-              key={nivel.id}
-              onPress={() => setDificultad(nivel.id)} 
-              style={[
-                styles.opcionDificultad, 
-                dificultad === nivel.id && styles.opcionSeleccionada
-              ]}
-            >
-              <Text style={[
-                styles.textoOpcion, 
-                dificultad === nivel.id && styles.textoSeleccionado
-              ]}>
-                {nivel.etiqueta}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+    <View style={styles.page}>
+      <Text style={styles.titulo}>JUEGO DE MEMORIA</Text>
+      <View style={styles.tituloLinea} />
 
-        <View style={styles.contenedorTiempo}>
-          <Text style={styles.textoTiempo}>Tiempo: {TIEMPO_UNICO} seg</Text>
+      {/* Tarjetas arriba (preview 3x3) */}
+      <View style={styles.espacioJuego}>
+        <Text style={styles.textoResumen}>Vista previa</Text>
+        <View style={[styles.grid, { width: 210 }]}> 
+          {previa3x3.map((fruta, i) => (
+            <View key={i} style={styles.cartaMiniatura}>
+              <Text style={styles.emojiCarta}>{fruta}</Text>
+            </View>
+          ))}
         </View>
       </View>
 
-      {/* --- Contenido / Previa --- */}
-      <View style={styles.cuerpo}>
-        <View style={styles.espacioJuego}>
-          <Text style={styles.textoResumen}>
-            Tablero de {CONFIG_CARTAS[dificultad]} cartas
-          </Text>
-          
-          <View style={[styles.cuadrillaCartas, { maxWidth: obtenerAnchoMaximo() }]}>
-            {cartasPrevia.map((fruta, i) => (
-              <View key={i} style={styles.cartaMiniatura}>
-                <Text style={styles.emojiCarta}>{fruta}</Text>
-              </View>
-            ))}
+      <View style={styles.contenedor}>
+        <View style={styles.headerRow}>
+          <View style={styles.objetivoContenedor}>
+            <Text style={styles.objetivoTitulo}>Objetivo</Text>
           </View>
         </View>
+        <View style={styles.objectContenedor}>
+          <Text style={styles.objetivoDescripcion}>Encuentra los pares y ejercita la memoria</Text>
+        </View>
 
-<Pressable 
-  style={styles.botonIniciar} 
-  onPress={() => router.push({
-    pathname: "/modulo/memoria/juego",
-    params: { 
-      nivel: dificultad, 
-      tiempo: TIEMPO_UNICO, 
-      // Enviamos el mazo barajado de la previa para que coincida
-      mazo: JSON.stringify(cartasPrevia) 
-    }
-  })}
->
-  <Text style={styles.textoBoton}>¡EMPEZAR!</Text>
-</Pressable>
+        <View style={styles.headerRow}>
+          <View style={styles.instruccionesContenedor}>
+            <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
+          </View>
+        </View>
+        <View style={styles.indicaciones}>
+          <Text style={styles.indicacion}>Toca una carta para voltearla.</Text>
+          <Text style={styles.indicacion}>Encuentra todos los pares antes de que acabe el tiempo.</Text>
+        </View>
+
+        <View style={styles.botonBase}>
+          <Pressable
+            style={styles.botonIniciar}
+            onPress={() => router.push({ pathname: "/modulo/memoria/juego", params: { tiempo: TIEMPO_UNICO } })}
+          >
+            <Text style={styles.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
