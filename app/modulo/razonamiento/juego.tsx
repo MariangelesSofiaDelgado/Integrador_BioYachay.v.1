@@ -42,16 +42,30 @@ export default function JuegoSuma() {
   }));
 
   const generarNuevaRonda = () => {
-    // Animación de éxito (el círculo crece y vuelve)
-    scaleTarget.value = withSequence(withTiming(1.2), withSpring(1));
-    
-    const nuevosNumeros = generarNumeros();
-    setNumbers(nuevosNumeros);
-    setTarget(generarObjetivo(nuevosNumeros));
-    setSelectedIndices([]);
-    setCurrentSum(0);
-  };
+  // 1. Primero generamos y ordenamos los números
+  const nuevosNumeros = generarNumeros().sort((a, b) => a - b);
+  
+  // 2. Elegimos 2 o 3 números ALEATORIOS de esa lista para crear el objetivo
+  // Esto garantiza que la suma SIEMPRE exista en el tablero
+  const indice1 = Math.floor(Math.random() * nuevosNumeros.length);
+  let indice2 = Math.floor(Math.random() * nuevosNumeros.length);
+  while (indice2 === indice1) indice2 = Math.floor(Math.random() * nuevosNumeros.length);
+  
+  let sumaSegura = nuevosNumeros[indice1] + nuevosNumeros[indice2];
+  
+  // Opcional: sumar un tercero para variar
+  if (Math.random() > 0.5) {
+    let indice3 = Math.floor(Math.random() * nuevosNumeros.length);
+    if (indice3 !== indice1 && indice3 !== indice2) {
+      sumaSegura += nuevosNumeros[indice3];
+    }
+  }
 
+  setNumbers(nuevosNumeros);
+  setTarget(sumaSegura); // Ahora el target siempre es una combinación posible
+  setSelectedIndices([]);
+  setCurrentSum(0);
+};
   useEffect(() => { generarNuevaRonda(); }, []);
 
   useEffect(() => {
