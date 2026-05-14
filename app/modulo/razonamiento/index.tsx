@@ -1,71 +1,63 @@
-import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
+import styles from './styles/stylesindex';
 
-export default function ModuloRazonamiento() {
+export default function InicioSuma() {
   const router = useRouter();
 
-  return (
-    <View style={styles.contenedor}>
-      <Text style={styles.titulo}>RAZONAMIENTO</Text>
-      <Text style={styles.descripcion}>Preparate para iniciar el juego de razonamiento.</Text>
+  const iniciar = () => router.push({ pathname: '/modulo/razonamiento/juego' });
 
+  return (
+    <View style={styles.page}>
+      <Text style={styles.titulo}>Suma Números</Text>
+      <View style={styles.tituloLinea} />
+
+      {/* Imagen/preview del juego agrandada */}
       <View style={styles.espacioJuego}>
-        <Text style={styles.textoEspacio}>Aqui se mostrara la vista previa del juego.</Text>
+        <View style={styles.iconContainer}>
+          <View style={styles.miniGrid}>
+            <Text style={styles.miniNum}>6</Text>
+            <Text style={[styles.miniNum, styles.blueBox]}>5</Text>
+            <Text style={[styles.miniNum, styles.blueBox]}>3</Text>
+            <Text style={styles.miniNum}>2</Text>
+            <Text style={styles.miniNum}>4</Text>
+            <Text style={[styles.miniNum, styles.blueBox]}>7</Text>
+            <Text style={styles.miniNum}>8</Text>
+            <Text style={[styles.miniNum, styles.blueBox]}>9</Text>
+            <Text style={styles.miniNum}>1</Text>
+          </View>
+        </View>
       </View>
 
-      <Pressable style={styles.botonIniciar} onPress={() => router.push("/modulo/razonamiento/juego")}>
-        <Text style={styles.textoBoton}>Iniciar</Text>
-      </Pressable>
+      <View style={styles.contenedor}>
+        <View style={styles.headerRow}>
+          <View style={styles.objetivoContenedor}>
+            <Text style={styles.objetivoTitulo}>Objetivo</Text>
+          </View>
+          <MaterialCommunityIcons name="puzzle" size={30} color="#f1c40f" />
+        </View>
+        <View style={styles.objectContenedor}>
+          <Text style={styles.objetivoDescripcion}>Resolver sumas rápidas</Text>
+        </View>
+
+        <View style={styles.headerRow}>
+          <View style={styles.instruccionesContenedor}>
+            <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
+          </View>
+        </View>
+        <View style={styles.indicaciones}>
+          <Text style={styles.indicacion}>Suma los números que aparecen hasta alcanzar el objetivo.</Text>
+          <Text style={styles.indicacion}>Aumenta la dificultad con cada acierto.</Text>
+        </View>
+
+        <View style={styles.botonBase}>
+          <Pressable style={styles.botonIniciar} onPress={iniciar}>
+            <Text style={styles.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  contenedor: {
-    flex: 1,
-    backgroundColor: "#ececec",
-    padding: 20,
-    justifyContent: "center",
-  },
-  titulo: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#2f5279",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  descripcion: {
-    fontSize: 17,
-    color: "#4b4b4b",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 20,
-  },
-  espacioJuego: {
-    height: 180,
-    borderWidth: 1,
-    borderColor: "#c9c9c9",
-    borderRadius: 12,
-    backgroundColor: "#f8f8f8",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  textoEspacio: {
-    color: "#666666",
-    textAlign: "center",
-    paddingHorizontal: 20,
-  },
-  botonIniciar: {
-    alignSelf: "center",
-    backgroundColor: "#2f5279",
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  textoBoton: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});

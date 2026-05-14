@@ -1,71 +1,71 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import styles from "./styles/stylesindex";
+
 
 export default function ModuloAtencion() {
   const router = useRouter();
 
-  return (
-    <View style={styles.contenedor}>
-      <Text style={styles.titulo}>ATENCION</Text>
-      <Text style={styles.descripcion}>Aqui podras iniciar el juego del modulo de Atencion.</Text>
+  const iniciarJuego = () => {
+    router.push({
+      pathname: "/modulo/atencion/juego",
+    });
+  };
 
+  const frutas = ["🍎", "🍊", "🍌", "🍇", "🍐", "🍉", "🍓", "🥝", "🍍"];
+
+  return (
+    <View style={styles.page}>
+      <Text style={styles.titulo}>Memofruta</Text>
+      <View style={styles.tituloLinea} />
+
+
+      {/* Vista previa de cartas */}
       <View style={styles.espacioJuego}>
-        <Text style={styles.textoEspacio}>Espacio previo del juego.</Text>
+        <View style={styles.grid}>
+          {frutas.map((fruta, index) => (
+            <View key={index} style={styles.carta}>
+              <Text style={styles.simbolo}>{fruta}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
-      <Pressable style={styles.botonIniciar} onPress={() => router.push("/modulo/atencion/juego")}>
-        <Text style={styles.textoBoton}>Iniciar</Text>
-      </Pressable>
+      {/* Objetivo */}
+      <View style={styles.contenedor}>
+        <View style={styles.headerRow}>
+          <View style={styles.objetivoContenedor}>
+            <Text style={styles.objetivoTitulo}>Objetivo</Text>
+          </View>
+          <Ionicons name="eye" size={30} color="#e93232" />
+        </View>
+        <View style={styles.objectContenedor}>
+          <Text style={styles.objetivoDescripcion}>
+            Fortalecer retención visual
+          </Text>
+        </View>
+
+        {/* Instrucciones */}
+          <View style={styles.headerRow}>
+            <View style={styles.instruccionesContenedor}>
+              <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
+            </View>
+          </View>
+          <View style={styles.indicaciones}>
+            <Text style={styles.indicacion}> Haz clic en el objeto que se te indique.</Text>
+            <Text style={styles.indicacion}> La dificultad aumenta cada acierto tiempo.</Text>
+            <Text style={styles.indicacion}> Sé rápido y preciso.</Text>
+          </View>
+
+        {/* Botón iniciar */}
+        <View style={styles.botonBase}>
+          <Pressable style={styles.botonIniciar} onPress={iniciarJuego}>
+            <Text style={styles.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  contenedor: {
-    flex: 1,
-    backgroundColor: "#ececec",
-    padding: 20,
-    justifyContent: "center",
-  },
-  titulo: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#2f5279",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  descripcion: {
-    fontSize: 17,
-    color: "#4b4b4b",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 20,
-  },
-  espacioJuego: {
-    height: 180,
-    borderWidth: 1,
-    borderColor: "#c9c9c9",
-    borderRadius: 12,
-    backgroundColor: "#f8f8f8",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  textoEspacio: {
-    color: "#666666",
-    textAlign: "center",
-    paddingHorizontal: 20,
-  },
-  botonIniciar: {
-    alignSelf: "center",
-    backgroundColor: "#2f5279",
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  textoBoton: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});
