@@ -106,22 +106,35 @@ export default function Tutorial() {
     }
   }, [paso, fallos]);
 
-  // --- PANRESPONDER ABSOLUTO ---
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (evt, gestureState) => {
-        let nuevoPorcentaje = (gestureState.moveX / SCREEN_WIDTH) * 100;
-        nuevoPorcentaje = nuevoPorcentaje - 7; 
+  // 1. Asegúrate de tener esto fuera del componente (al inicio de tu archivo)
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-        if (nuevoPorcentaje < 1) nuevoPorcentaje = 1;
-        if (nuevoPorcentaje > 82) nuevoPorcentaje = 82; 
+// ... dentro del componente:
+const panResponder = useRef(
+  PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    
+    // Cambiamos a _ (guion bajo) para decirle a TS que no usaremos esas variables y quitar el aviso
+    onPanResponderGrant: (_, __) => {}, 
 
-        porcentajeX.setValue(nuevoPorcentaje);
-      },
-    })
-  ).current;
+    onPanResponderMove: (_, gestureState) => {
+      // Usamos el ancho real de pantalla
+      const anchoReal = Dimensions.get("window").width; 
+      
+      let nuevoPorcentaje = (gestureState.moveX / anchoReal) * 100;
+
+      // Ajuste de centrado (si el emoji mide 15%, restamos la mitad: 7.5)
+      nuevoPorcentaje = nuevoPorcentaje - 7.5; 
+
+      // Límites estrictos para evitar que se salga
+      if (nuevoPorcentaje < 0) nuevoPorcentaje = 0;
+      if (nuevoPorcentaje > 85) nuevoPorcentaje = 85; 
+
+      porcentajeX.setValue(nuevoPorcentaje);
+    },
+  })
+).current;
 
   const posicionCanastaString = porcentajeX.interpolate({
     inputRange: [0, 100],
@@ -137,9 +150,12 @@ export default function Tutorial() {
     if (paso === 1) {
       setPaso(2);
     } else if (paso === 2) {
-      if (frutaAtrapada) setPaso(3);
+      if (frutaAtrapada) {
+        setPaso(3);
+      }
     } else {
-      router.push("../modulo/juego");
+      // 👈 Cambiado para ir a la raíz del proyecto (tu menú principal)
+      router.push("/modulo/coordinacion"); 
     }
   };
 
@@ -168,9 +184,9 @@ export default function Tutorial() {
       case 3:
         return {
           titulo: "Paso 3 de 3",
-          descripcion: "¡Estás listo para el gran reto!",
-          indicacion: "⏱️ Tendrás un tiempo límite para atrapar la mayor cantidad de frutas.",
-          boton: "¡Empezar a Jugar! 🎮",
+          descripcion: "¡Has completado el tutorial!",
+          indicacion: "Presiona el botón para volver al menú principal.",
+          boton: "Volver al Menú 🏠", // 👈 Cambiado el texto
         };
       default:
         return { titulo: "", descripcion: "", indicacion: "", boton: "" };

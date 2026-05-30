@@ -1,31 +1,50 @@
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+const ALTO_TARJETA = SCREEN_HEIGHT * 0.40;
 
 export default StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: "#ededed", // Mismo gris claro de fondo
-  },
-  zonaSuperior: {
-    flex: 1,
+  page: { flex: 1, backgroundColor: "#ededed", overflow: "hidden" },
+  
+  zonaJuego: {
+    flex: 0.60,
+    width: "100%",
     justifyContent: "flex-start",
-    alignItems: "center",
-    zIndex: 2,
+    alignItems: "flex-start",
+    position: "relative",
   },
-  titulo: {
-    fontSize: 38,
-    fontWeight: "700",
-    color: "#e93232", // El mismo rojo vibrante de "Atrapa las frutas"
+  
+  // Canasta (Exactamente la misma lógica del tutorial)
+  canasta: {
+    fontSize: 50,
+    position: "absolute",
+    bottom: 20,
+    zIndex: 10,
+  },
+  
+  // Frutas que caerán
+  fruta: {
+    fontSize: 40,
+    position: "absolute",
+    zIndex: 5,
+  },
+
+  // Tarjeta de puntuación (Reemplaza la de indicaciones del tutorial)
+  contenedorInfo: {
+    flex: 0.40,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 20,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.1,
+  },
+  textoPuntaje: {
+    fontSize: 24,
+    fontWeight: "bold",
     textAlign: "center",
-    marginTop: 35, // Margen exacto del index
-    marginBottom: 4,
-  },
-  tituloLinea: {
-    width: 230,
-    height: 3,
-    backgroundColor: "#e93232", // Línea roja idéntica
-    alignSelf: "center",
-    borderRadius: 999,
-    marginTop: 3,
-    marginBottom: 5,
-  },
+    color: "#337ab7",
+  }
 });
