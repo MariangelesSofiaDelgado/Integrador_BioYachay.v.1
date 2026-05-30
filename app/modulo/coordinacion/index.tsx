@@ -163,7 +163,10 @@ export default function ModuloCoordinacion() {
 
           {/* Botón Iniciar (Naranja) */}
           <View style={styles.botonBaseIniciar}>
-            <Pressable style={styles.botonIniciar} onPress={iniciarJuego}>
+            <Pressable 
+              style={styles.botonIniciar} 
+              onPress={() => router.push("../modulo/coordinacion/juego")}
+            >
               <Text style={styles.textoBoton}>Iniciar</Text>
             </Pressable>
           </View>
