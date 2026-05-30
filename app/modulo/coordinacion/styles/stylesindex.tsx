@@ -131,26 +131,57 @@ export default StyleSheet.create({
     color: "#444",
     fontWeight: "500",
   },
-  botonBase: {
-    alignSelf: "center",
-    backgroundColor: "#ce540e",
-    borderRadius: 20,
-    paddingVertical: 2,
+
+  /* --- NUEVA FILA DE BOTONES --- */
+  filaBotones: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 5,
     marginBottom: 5,
   },
-  botonIniciar: {
-    alignSelf: "center",
-    backgroundColor: "#faa638",
-    paddingHorizontal: 75,
-    paddingVertical: 8,
+
+  /* --- ESTILOS BOTÓN TUTORIAL (ROJO) --- */
+  botonBaseTutorial: {
+    flex: 1,
+    backgroundColor: "#b31d1d", // Sombra roja oscura
+    borderRadius: 20,
+    paddingVertical: 2,
+    marginRight: 10, // Separación con el botón de Iniciar
+  },
+  botonTutorial: {
+    alignItems: "center",
+    backgroundColor: "#e93232", // Rojo vibrante del tema
+    paddingVertical: 10,
     borderRadius: 20,
     position: "relative",
     top: -5,
     elevation: 3,
   },
+
+  /* --- ESTILOS BOTÓN INICIAR (NARANJA) --- */
+  botonBaseIniciar: {
+    flex: 1,
+    backgroundColor: "#ce540e", // Sombra naranja oscura
+    borderRadius: 20,
+    paddingVertical: 2,
+    marginLeft: 10, // Separación con el botón de Tutorial
+  },
+  botonIniciar: {
+    alignItems: "center",
+    backgroundColor: "#faa638", // Naranja brillante
+    paddingVertical: 10,
+    borderRadius: 20,
+    position: "relative",
+    top: -5,
+    elevation: 3,
+  },
+
+  /* --- TEXTO DE AMBOS BOTONES --- */
   textoBoton: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: 18, // Tamaño unificado de 18 para mantener consistencia
     fontWeight: "600",
     textAlign: "center",
   },

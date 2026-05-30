@@ -148,11 +148,26 @@ export default function ModuloCoordinacion() {
           <Text style={styles.indicacion}>⏱️ ¡Atrapa la mayor cantidad posible!</Text>
         </View>
 
-        {/* Botón iniciar */}
-        <View style={styles.botonBase}>
-          <Pressable style={styles.botonIniciar} onPress={iniciarJuego}>
-            <Text style={styles.textoBoton}>Iniciar</Text>
-          </Pressable>
+        {/* --- FILA DE BOTONES (TUTORIAL + INICIAR) --- */}
+        <View style={styles.filaBotones}>
+          
+          {/* Botón Tutorial (Rojo) */}
+          <View style={styles.botonBaseTutorial}>
+            <Pressable 
+              style={styles.botonTutorial} 
+              onPress={() => router.push("../modulo/coordinacion/tutorial")}
+            >
+              <Text style={styles.textoBoton}>Tutorial</Text>
+            </Pressable>
+          </View>
+
+          {/* Botón Iniciar (Naranja) */}
+          <View style={styles.botonBaseIniciar}>
+            <Pressable style={styles.botonIniciar} onPress={iniciarJuego}>
+              <Text style={styles.textoBoton}>Iniciar</Text>
+            </Pressable>
+          </View>
+
         </View>
 
       </View>
