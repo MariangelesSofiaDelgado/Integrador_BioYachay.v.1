@@ -1,50 +1,36 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-const ALTO_TARJETA = SCREEN_HEIGHT * 0.40;
-
-export default StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#ededed", overflow: "hidden" },
-  
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   zonaJuego: {
-    flex: 0.60,
-    width: "100%",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    position: "relative",
+    flex: 1,
+    position: 'relative', // Vital para el posicionamiento absoluto
+    overflow: 'hidden',   // Vital para que las frutas desaparezcan al salir
   },
-  
-  // Canasta (Exactamente la misma lógica del tutorial)
-  canasta: {
-    fontSize: 50,
-    position: "absolute",
-    bottom: 20,
-    zIndex: 10,
-  },
-  
-  // Frutas que caerán
   fruta: {
-    fontSize: 40,
-    position: "absolute",
-    zIndex: 5,
+    position: 'absolute',
+    fontSize: 45, // Aumentado de 35 a 45 para que se vea más grande
   },
-
-  // Tarjeta de puntuación (Reemplaza la de indicaciones del tutorial)
+  canasta: {
+  position: 'absolute',
+  bottom: 40,
+  left: 0, // <--- AGREGA ESTO
+  fontSize: 70,
+  zIndex: 10, // <--- Asegura que la canasta esté siempre encima de las frutas
+},
   contenedorInfo: {
-    flex: 0.40,
-    backgroundColor: "#ffffff",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
     padding: 20,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.1,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderColor: '#eee',
   },
   textoPuntaje: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#337ab7",
-  }
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
+
+export default styles;
