@@ -2,17 +2,17 @@ import { Stack, useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-export default function JuegoVisoespacial() {
+export default function TutorialVisoespacial() {
   const router = useRouter();
 
   return (
     <View style={styles.page}>
       {/* Hereda automáticamente el header azul de tu layout principal */}
-      <Stack.Screen options={{ title: "Juego" }} />
+      <Stack.Screen options={{ title: "Tutorial" }} />
 
       <View style={styles.contenedorCentral}>
-        <Text style={styles.textoModulo}>Módulo Juego</Text>
-        <Text style={styles.subtexto}>Aquí irá la lógica para arrastrar y encajar las figuras</Text>
+        <Text style={styles.textoModulo}>Módulo Tutorial</Text>
+        <Text style={styles.subtexto}>Aquí irá la guía interactiva paso a paso</Text>
       </View>
     </View>
   );
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   textoModulo: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#7dc123", // Verde característico del botón iniciar de tu diseño
+    color: "#2b6cb0", // Azul característico de tu diseño
     marginBottom: 10,
   },
   subtexto: {
