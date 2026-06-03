@@ -1,72 +1,102 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { styles } from "./styles/stylesindex";
+
+// Configuración del juego
+const TIEMPO_UNICO = 60;
+const CONFIG_CARTAS = {
+  facil: 8,
+  normal: 12,
+  dificil: 20
+} as const;
+
+const FRUTAS = ["🍎", "🍌", "🍇", "🍊", "🍓", "🍍", "🥥", "🥝", "🍉", "🍒"];
+
+const NIVELES = [
+  { id: "facil", etiqueta: "Fácil" },
+  { id: "normal", etiqueta: "Normal" },
+  { id: "dificil", etiqueta: "Difícil" },
+] as const;
 
 export default function ModuloMemoria() {
   const router = useRouter();
+  const [dificultad, setDificultad] = useState<keyof typeof CONFIG_CARTAS>("normal");
+
+  // Genera y desordena los pares de frutas para la vista previa
+  const cartasPrevia = useMemo(() => {
+    const cantidadTotal = CONFIG_CARTAS[dificultad];
+    const seleccion = FRUTAS.slice(0, cantidadTotal / 2);
+    const pares = [...seleccion, ...seleccion];
+    
+    // Algoritmo de barajado Fisher-Yates
+    for (let i = pares.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pares[i], pares[j]] = [pares[j], pares[i]];
+    }
+    return pares;
+  }, [dificultad]);
+
+  // Vista previa fija 3x3 (solo visual)
+  const previa3x3 = FRUTAS.slice(0, 9);
+
+ // Calcula el ancho máximo para forzar las filas deseadas
+  const obtenerAnchoMaximo = () => {
+    if (dificultad === 'facil') return 210;  // 4 cartas por fila -> 2 filas
+    if (dificultad === 'normal') return 210; // 4 cartas por fila -> 3 filas
+    
+    // CAMBIO AQUÍ: 
+    // 260px permite exactamente 5 cartas por fila. 
+    // 20 cartas / 5 por fila = 4 filas exactas.
+    return 260; 
+  };
 
   return (
-    <View style={styles.contenedor}>
-      <Text style={styles.titulo}>MEMORIA</Text>
-      <Text style={styles.descripcion}>Aqui podras iniciar el juego del modulo de Memoria.</Text>
+    <View style={styles.page}>
+      <Text style={styles.titulo}>JUEGO DE MEMORIA</Text>
+      <View style={styles.tituloLinea} />
 
+      {/* Tarjetas arriba (preview 3x3) */}
       <View style={styles.espacioJuego}>
-        <Text style={styles.textoEspacio}>Espacio previo del juego.</Text>
+        <Text style={styles.textoResumen}>Vista previa</Text>
+        <View style={[styles.grid, { width: 210 }]}> 
+          {previa3x3.map((fruta, i) => (
+            <View key={i} style={styles.cartaMiniatura}>
+              <Text style={styles.emojiCarta}>{fruta}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
-      <Pressable style={styles.botonIniciar} onPress={() => router.push("/modulo/memoria/juego")}>
-        <Text style={styles.textoBoton}>Iniciar</Text>
-      </Pressable>
+      <View style={styles.contenedor}>
+        <View style={styles.headerRow}>
+          <View style={styles.objetivoContenedor}>
+            <Text style={styles.objetivoTitulo}>Objetivo</Text>
+          </View>
+        </View>
+        <View style={styles.objectContenedor}>
+          <Text style={styles.objetivoDescripcion}>Encuentra los pares y ejercita la memoria</Text>
+        </View>
+
+        <View style={styles.headerRow}>
+          <View style={styles.instruccionesContenedor}>
+            <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
+          </View>
+        </View>
+        <View style={styles.indicaciones}>
+          <Text style={styles.indicacion}>Toca una carta para voltearla.</Text>
+          <Text style={styles.indicacion}>Encuentra todos los pares antes de que acabe el tiempo.</Text>
+        </View>
+
+        <View style={styles.botonBase}>
+          <Pressable
+            style={styles.botonIniciar}
+            onPress={() => router.push({ pathname: "/modulo/memoria/juego", params: { tiempo: TIEMPO_UNICO } })}
+          >
+            <Text style={styles.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  contenedor: {
-    flex: 1,
-    backgroundColor: "#ececec",
-    padding: 20,
-    justifyContent: "center",
-  },
-  titulo: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#2f5279",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  descripcion: {
-    fontSize: 17,
-    color: "#4b4b4b",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 20,
-  },
-  espacioJuego: {
-    height: 180,
-    borderWidth: 1,
-    borderColor: "#c9c9c9",
-    borderRadius: 12,
-    backgroundColor: "#f8f8f8",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  textoEspacio: {
-    color: "#666666",
-    textAlign: "center",
-    paddingHorizontal: 20,
-  },
-  botonIniciar: {
-    alignSelf: "center",
-    backgroundColor: "#2f5279",
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  textoBoton: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});
-
