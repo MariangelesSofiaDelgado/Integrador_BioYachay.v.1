@@ -3,364 +3,364 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Animated, Dimensions, PanResponder, Text, View } from "react-native";
 import styles from "../visoespacial/styles/stylesjuego";
 
-const { width: SW, height: SH } = Dimensions.get("window");
+const { width: SW } = Dimensions.get("window");
 
-// ─── FORMAS ────────────────────────────────────────────────────────────────
-type ShapeType = "triangulo" | "circulo" | "cuadrado" | "rombo" | "estrella";
-const FORMAS: ShapeType[] = ["triangulo", "circulo", "cuadrado", "rombo", "estrella"];
-const COLORES_FIGURA = ["#e53e3e", "#3182ce", "#d69e2e", "#805ad5", "#38a169"];
+type ShapeType = "triangulo" | "circulo" | "rombo" | "rectangulo" | "hexagono" | "manzana" | "uva";
+const FORMAS: ShapeType[] = ["triangulo", "circulo", "rombo", "rectangulo", "hexagono", "manzana", "uva"];
+const COLORES: Record<ShapeType, string> = {
+  triangulo:  "#e53e3e",
+  circulo:    "#3182ce",
+  rombo:      "#805ad5",
+  rectangulo: "#d69e2e",
+  hexagono:   "#e67e22",
+  manzana:    "#27ae60",
+  uva:        "#8e44ad",
+};
 
-function RenderFigura({ tipo, color, size = 48 }: { tipo: ShapeType; color: string; size?: number }) {
-  if (tipo === "triangulo") {
-    return (
-      <View style={{
-        width: 0, height: 0,
-        borderLeftWidth: size / 2, borderRightWidth: size / 2, borderBottomWidth: size,
-        borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomColor: color,
-      }} />
-    );
-  }
-  if (tipo === "circulo") {
-    return <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color }} />;
-  }
-  if (tipo === "cuadrado") {
-    return <View style={{ width: size, height: size, backgroundColor: color, borderRadius: 6 }} />;
-  }
-  if (tipo === "rombo") {
-    return (
-      <View style={{ width: size, height: size, backgroundColor: color, borderRadius: 4, transform: [{ rotate: "45deg" }] }} />
-    );
-  }
-  return <Text style={{ fontSize: size - 4, lineHeight: size, color }}>★</Text>;
+function RenderFigura({ tipo, size = 62 }: { tipo: ShapeType; size?: number }) {
+  const color = COLORES[tipo];
+  if (tipo === "triangulo") return (
+    <View style={{ width: 0, height: 0,
+      borderLeftWidth: size/2, borderRightWidth: size/2, borderBottomWidth: size,
+      borderLeftColor: "transparent", borderRightColor: "transparent",
+      borderBottomColor: color }} />
+  );
+  if (tipo === "circulo") return (
+    <View style={{ width: size, height: size, borderRadius: size/2, backgroundColor: color }} />
+  );
+  if (tipo === "rombo") return (
+    <View style={{ width: size, height: size, backgroundColor: color,
+      borderRadius: 4, transform: [{ rotate: "45deg" }] }} />
+  );
+  if (tipo === "rectangulo") return (
+    // Rectángulo apaisado - claramente distinto al rombo y triángulo
+    <View style={{ width: size * 1.5, height: size * 0.65, backgroundColor: color, borderRadius: 8 }} />
+  );
+  if (tipo === "hexagono") return (
+    // Hexágono simulado: círculo achatado con bordes
+    <View style={{ width: size, height: size * 0.87, backgroundColor: color, borderRadius: size * 0.25 }} />
+  );
+  if (tipo === "manzana") return (
+    <Text style={{ fontSize: size, lineHeight: size + 4 }}>🍎</Text>
+  );
+  return <Text style={{ fontSize: size, lineHeight: size + 4 }}>🍇</Text>;
 }
 
-function RenderMolde({ tipo, size = 56 }: { tipo: ShapeType; size?: number }) {
-  if (tipo === "triangulo") {
-    return (
-      <View style={{ alignItems: "center", justifyContent: "center", width: size + 10, height: size + 10 }}>
-        <View style={{
-          width: 0, height: 0,
-          borderLeftWidth: (size + 4) / 2, borderRightWidth: (size + 4) / 2, borderBottomWidth: size + 4,
-          borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomColor: "rgba(150,150,150,0.35)",
-        }} />
-      </View>
-    );
-  }
-  if (tipo === "circulo") {
-    return (
-      <View style={{
-        width: size + 8, height: size + 8, borderRadius: (size + 8) / 2,
-        backgroundColor: "rgba(150,150,150,0.2)", borderWidth: 2, borderColor: "#aaa", borderStyle: "dashed",
-      }} />
-    );
-  }
-  if (tipo === "cuadrado") {
-    return (
-      <View style={{
-        width: size + 8, height: size + 8, borderRadius: 8,
-        backgroundColor: "rgba(150,150,150,0.2)", borderWidth: 2, borderColor: "#aaa", borderStyle: "dashed",
-      }} />
-    );
-  }
-  if (tipo === "rombo") {
-    return (
-      <View style={{
-        width: size + 8, height: size + 8,
-        backgroundColor: "rgba(150,150,150,0.2)", borderWidth: 2, borderColor: "#aaa", borderStyle: "dashed",
-        borderRadius: 4, transform: [{ rotate: "45deg" }],
-      }} />
-    );
-  }
+function RenderMolde({ tipo, size = 66 }: { tipo: ShapeType; size?: number }) {
+  const base = {
+    backgroundColor: "rgba(150,150,150,0.15)",
+    borderWidth: 2, borderColor: "#bbb", borderStyle: "dashed" as const,
+  };
+  if (tipo === "triangulo") return (
+    <View style={{ alignItems: "center", justifyContent: "center", width: size+12, height: size+12 }}>
+      <View style={{ width: 0, height: 0,
+        borderLeftWidth: (size+4)/2, borderRightWidth: (size+4)/2,
+        borderBottomWidth: size+4, borderLeftColor: "transparent",
+        borderRightColor: "transparent", borderBottomColor: "rgba(150,150,150,0.3)" }} />
+    </View>
+  );
+  if (tipo === "circulo") return (
+    <View style={[base, { width: size+12, height: size+12, borderRadius: (size+12)/2 }]} />
+  );
+  if (tipo === "rombo") return (
+    <View style={[base, { width: size+8, height: size+8, borderRadius: 4,
+      transform: [{ rotate: "45deg" }] }]} />
+  );
+  if (tipo === "rectangulo") return (
+    <View style={[base, { width: size*1.5+12, height: size*0.65+12, borderRadius: 10 }]} />
+  );
+  if (tipo === "hexagono") return (
+    <View style={[base, { width: size+12, height: size*0.87+12, borderRadius: size*0.25 }]} />
+  );
+  if (tipo === "manzana") return (
+    <View style={[base, { width: size+12, height: size+12, borderRadius: (size+12)/2,
+      alignItems: "center", justifyContent: "center" }]}>
+      <Text style={{ fontSize: size - 8, opacity: 0.18 }}>🍎</Text>
+    </View>
+  );
   return (
-    <View style={{
-      width: size + 8, height: size + 8, borderRadius: (size + 8) / 2,
-      backgroundColor: "rgba(150,150,150,0.15)", borderWidth: 2, borderColor: "#aaa", borderStyle: "dashed",
-      alignItems: "center", justifyContent: "center",
-    }}>
-      <Text style={{ fontSize: size - 4, color: "rgba(150,150,150,0.5)" }}>★</Text>
+    <View style={[base, { width: size+12, height: size+12, borderRadius: (size+12)/2,
+      alignItems: "center", justifyContent: "center" }]}>
+      <Text style={{ fontSize: size - 8, opacity: 0.18 }}>🍇</Text>
     </View>
   );
 }
 
-// ─── TIPOS ─────────────────────────────────────────────────────────────────
 interface Figura {
   id: number;
   tipo: ShapeType;
-  color: string;
   pan: Animated.ValueXY;
-  posInicio: { x: number; y: number };
-  posActual: { x: number; y: number };
+  inicioX: number;
+  inicioY: number;
   encajada: boolean;
-  moldeIdx: number;
+  tieneMolde: boolean;
 }
-
 interface Molde {
   id: number;
   tipo: ShapeType;
   ocupado: boolean;
+  cx: number;
+  cy: number;
 }
 
-let idCounter = 1;
-const nextId = () => idCounter++;
+let uid = 1;
+const nid = () => uid++;
 
 function getDificultad(aciertos: number) {
-  if (aciertos >= 15) return { nFiguras: 7, nMoldes: 5, label: "🔥 Difícil" };
-  if (aciertos >= 7)  return { nFiguras: 5, nMoldes: 3, label: "⚡ Medio" };
-  return { nFiguras: 3, nMoldes: 3, label: "🌱 Fácil" };
+  if (aciertos >= 15) return { nFigs: 7, nMoldes: 5, label: "🔥 Difícil" };
+  if (aciertos >= 7)  return { nFigs: 5, nMoldes: 3, label: "⚡ Medio" };
+  return { nFigs: 3, nMoldes: 3, label: "🌱 Fácil" };
 }
 
-function generarRonda(aciertos: number): { figuras: Figura[]; moldes: Molde[] } {
-  const { nFiguras, nMoldes } = getDificultad(aciertos);
-
-  const formasPool = [...FORMAS].sort(() => Math.random() - 0.5);
-  const formasElegidas = formasPool.slice(0, nMoldes);
-
-  const moldes: Molde[] = formasElegidas.map((tipo) => ({
-    id: nextId(),
-    tipo,
-    ocupado: false,
+function generarRonda(aciertos: number) {
+  const { nFigs, nMoldes } = getDificultad(aciertos);
+  const pool = [...FORMAS].sort(() => Math.random() - 0.5);
+  const formasMoldes = pool.slice(0, nMoldes);
+  const moldes: Molde[] = formasMoldes.map(tipo => ({
+    id: nid(), tipo, ocupado: false, cx: 0, cy: 0,
   }));
 
-  const asignaciones: { tipo: ShapeType; moldeIdx: number }[] = moldes.map((m, i) => ({
-    tipo: m.tipo,
-    moldeIdx: i,
-  }));
+  const tiposConMolde = new Set(formasMoldes);
+  const tiposTrampa = FORMAS.filter(f => !tiposConMolde.has(f));
 
-  // Figuras extra: tipos que NO tienen molde (el jugador debe ignorarlas)
-  const tiposConMolde = new Set(moldes.map(m => m.tipo));
-  const tiposSinMolde = FORMAS.filter(f => !tiposConMolde.has(f));
-  let extraIdx = 0;
-  for (let i = asignaciones.length; i < nFiguras; i++) {
-    // Usamos tipos que no tienen molde para que sean figuras trampa únicas
-    const tipoExtra = tiposSinMolde[extraIdx % tiposSinMolde.length];
-    extraIdx++;
-    asignaciones.push({ tipo: tipoExtra, moldeIdx: -1 });
+  const items: { tipo: ShapeType; tieneMolde: boolean }[] = [
+    ...formasMoldes.map(t => ({ tipo: t, tieneMolde: true })),
+  ];
+  // Figuras trampa: tipos únicos que no se repiten con nada
+  const trampasUsadas = new Set<ShapeType>(formasMoldes);
+  for (let i = formasMoldes.length; i < nFigs; i++) {
+    const disponible = tiposTrampa.find(t => !trampasUsadas.has(t));
+    if (disponible) {
+      trampasUsadas.add(disponible);
+      items.push({ tipo: disponible, tieneMolde: false });
+    }
   }
+  items.sort(() => Math.random() - 0.5);
 
-  asignaciones.sort(() => Math.random() - 0.5);
-
-  const cols = Math.min(nFiguras, 3);
-  const figuras: Figura[] = asignaciones.map((a, i) => {
+  const cols = Math.min(nFigs, 3);
+  const figuras: Figura[] = items.map((item, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const cellW = SW / cols;
-    const startX = cellW * col + cellW / 2 - 28;
-    const startY = 60 + row * 110;
+    const x = (SW / (cols + 1)) * (col + 1) - 28;
+    const y = 55 + row * 105;
     return {
-      id: nextId(),
-      tipo: a.tipo,
-      color: COLORES_FIGURA[FORMAS.indexOf(a.tipo)],
-      pan: new Animated.ValueXY({ x: startX, y: startY }),
-      posInicio: { x: startX, y: startY },
-      posActual: { x: startX, y: startY },
-      encajada: false,
-      moldeIdx: a.moldeIdx,
+      id: nid(), tipo: item.tipo, tieneMolde: item.tieneMolde,
+      pan: new Animated.ValueXY({ x, y }),
+      inicioX: x, inicioY: y, encajada: false,
     };
   });
 
   return { figuras, moldes };
 }
 
-// ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
 export default function JuegoFiguras() {
   const router = useRouter();
   const [aciertos, setAciertos] = useState(0);
-  const [fallos, setFallos]     = useState(0);
-  const [tiempo, setTiempo]     = useState(60);
+  const [fallos,   setFallos]   = useState(0);
+  const [tiempo,   setTiempo]   = useState(60);
   const [terminado, setTerminado] = useState(false);
-  const [figuras, setFiguras]   = useState<Figura[]>([]);
-  const [moldes, setMoldes]     = useState<Molde[]>([]);
+  const [figuras,  setFiguras]  = useState<Figura[]>([]);
+  const [moldes,   setMoldes]   = useState<Molde[]>([]);
 
-  const aciertosRef  = useRef(0);
-  const figurasRef   = useRef<Figura[]>([]);
-  const moldesRef    = useRef<Molde[]>([]);
-  const moldeLayouts = useRef<{ [id: number]: { x: number; y: number; w: number; h: number } }>({});
-  const moldeRefs = useRef<{ [id: number]: any }>({});
-  const pageOffsetY = useRef(0); // offset Y de la página completa (para corregir pageY del measure)
-  const panResponders = useRef<{ [id: number]: any }>({});
+  const aciertosRef = useRef(0);
+  const figurasRef  = useRef<Figura[]>([]);
+  const moldesRef   = useRef<Molde[]>([]);
+  const prs         = useRef<{ [id: number]: any }>({});
+
+  // Posición Y absoluta donde empiezan los moldes (top del View raíz + zonaFiguras.height + divisor)
+  const moldesOffsetY = useRef(0);
 
   useEffect(() => { aciertosRef.current = aciertos; }, [aciertos]);
-  useEffect(() => { figurasRef.current = figuras; }, [figuras]);
-  useEffect(() => { moldesRef.current = moldes; }, [moldes]);
+  useEffect(() => { figurasRef.current  = figuras;  }, [figuras]);
+  useEffect(() => { moldesRef.current   = moldes;   }, [moldes]);
 
-  // Cronómetro
   useEffect(() => {
     if (terminado) return;
     if (tiempo <= 0) { setTerminado(true); return; }
-    const t = setInterval(() => setTiempo(s => s - 1), 1000);
+    const t = setInterval(() => {
+      setTiempo(s => {
+        if (s <= 1) { setTerminado(true); return 0; }
+        return s - 1;
+      });
+    }, 1000);
     return () => clearInterval(t);
-  }, [tiempo, terminado]);
+  }, [terminado]);
 
   const iniciarRonda = useCallback((ac: number) => {
-    moldeLayouts.current = {};
-    panResponders.current = {};
-    const { figuras: newFigs, moldes: newMoldes } = generarRonda(ac);
-    figurasRef.current = newFigs;
-    moldesRef.current  = newMoldes;
-    setFiguras([...newFigs]);
-    setMoldes([...newMoldes]);
+    prs.current = {};
+    const { figuras: f, moldes: m } = generarRonda(ac);
+    figurasRef.current = f;
+    moldesRef.current  = m;
+    setFiguras([...f]);
+    setMoldes([...m]);
   }, []);
 
-  // Primera ronda
   useEffect(() => { iniciarRonda(0); }, []);
 
-  const verificarFinRonda = useCallback(() => {
-    const todasEncajadas = figurasRef.current.every(f => f.encajada);
-    if (todasEncajadas) {
-      setTimeout(() => iniciarRonda(aciertosRef.current), 700);
+  const verificarFin = useCallback(() => {
+    if (figurasRef.current.filter(f => f.tieneMolde).every(f => f.encajada)) {
+      iniciarRonda(aciertosRef.current);
     }
   }, [iniciarRonda]);
 
-  const crearPanResponder = useCallback((figId: number) => {
-    const inicio = { x: 0, y: 0 };
-
+  const crearPR = useCallback((figId: number) => {
+    const base = { x: 0, y: 0 };
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder:  () => true,
-
       onPanResponderGrant: () => {
         const fig = figurasRef.current.find(f => f.id === figId);
         if (!fig || fig.encajada) return;
-        const x = (fig.pan.x as any)._value ?? fig.posActual.x;
-        const y = (fig.pan.y as any)._value ?? fig.posActual.y;
-        fig.posActual = { x, y };
-        inicio.x = x;
-        inicio.y = y;
+        base.x = (fig.pan.x as any)._value ?? fig.inicioX;
+        base.y = (fig.pan.y as any)._value ?? fig.inicioY;
       },
-
       onPanResponderMove: (_, gs) => {
         const fig = figurasRef.current.find(f => f.id === figId);
         if (!fig || fig.encajada) return;
-        const newX = Math.max(0, Math.min(SW - 60, inicio.x + gs.dx));
-        const newY = Math.max(0, inicio.y + gs.dy);
-        fig.pan.setValue({ x: newX, y: newY });
+        fig.pan.setValue({
+          x: Math.max(0, Math.min(SW - 64, base.x + gs.dx)),
+          y: Math.max(0, base.y + gs.dy),
+        });
       },
-
       onPanResponderRelease: (_, gs) => {
         const fig = figurasRef.current.find(f => f.id === figId);
         if (!fig || fig.encajada) return;
 
-        const finalX = inicio.x + gs.dx + 28; // centro de la figura
-        const finalY = inicio.y + gs.dy + 28;
-        fig.posActual = { x: inicio.x + gs.dx, y: inicio.y + gs.dy };
+        const fx = base.x + gs.dx + 39; // mitad de figura (62/2 + padding 8)
+        const fy = base.y + gs.dy + 39;
+        const SNAP = 65;
 
-        const TOLERANCIA = 48;
-        let accion: "acierto" | "fallo" | "ninguno" = "ninguno";
-        let moldeTarget: Molde | null = null;
-
-        for (const molde of moldesRef.current) {
-          if (molde.ocupado) continue;
-          const layout = moldeLayouts.current[molde.id];
-          if (!layout) continue;
-
-          const centraMoldeX = layout.x + layout.w / 2;
-          const centraMoldeY = layout.y + layout.h / 2;
-          const dist = Math.sqrt(
-            Math.pow(finalX - centraMoldeX, 2) +
-            Math.pow(finalY - centraMoldeY, 2)
-          );
-
-          if (dist < TOLERANCIA) {
-            moldeTarget = molde;
-            accion = fig.tipo === molde.tipo ? "acierto" : "fallo";
-            break;
-          }
+        let mejor: Molde | null = null;
+        let menorDist = Infinity;
+        for (const m of moldesRef.current) {
+          if (m.ocupado || m.cx === 0) continue;
+          const dist = Math.sqrt((fx - m.cx) ** 2 + (fy - m.cy) ** 2);
+          if (dist < menorDist) { menorDist = dist; mejor = m; }
         }
 
-        if (accion === "acierto" && moldeTarget) {
-          const layout = moldeLayouts.current[moldeTarget.id];
-          fig.encajada = true;
-          moldeTarget.ocupado = true;
-
-          Animated.spring(fig.pan, {
-            toValue: { x: layout.x + layout.w / 2 - 28, y: layout.y + layout.h / 2 - 28 },
-            useNativeDriver: false,
-            speed: 20,
-          }).start();
-
-          setAciertos(a => { aciertosRef.current = a + 1; return a + 1; });
-          setMoldes([...moldesRef.current]);
-          setFiguras([...figurasRef.current]);
-          setTimeout(verificarFinRonda, 300);
-
-        } else {
-          if (accion === "fallo") {
+        if (mejor && menorDist < SNAP) {
+          if (fig.tipo === mejor.tipo) {
+            fig.encajada = true;
+            mejor.ocupado = true;
+            Animated.spring(fig.pan, {
+              toValue: { x: mejor.cx - 39, y: mejor.cy - 39 },
+              useNativeDriver: false, speed: 25, bounciness: 8,
+            }).start();
+            setAciertos(a => { aciertosRef.current = a + 1; return a + 1; });
+            setMoldes([...moldesRef.current]);
+            setFiguras([...figurasRef.current]);
+            setTimeout(verificarFin, 300);
+          } else {
             setFallos(f => f + 1);
+            Animated.spring(fig.pan, {
+              toValue: { x: fig.inicioX, y: fig.inicioY },
+              useNativeDriver: false, speed: 14,
+            }).start();
           }
-          // Regresar a posición original
+        } else {
           Animated.spring(fig.pan, {
-            toValue: fig.posInicio,
-            useNativeDriver: false,
-            speed: 12,
+            toValue: { x: fig.inicioX, y: fig.inicioY },
+            useNativeDriver: false, speed: 14,
           }).start();
-          fig.posActual = { ...fig.posInicio };
         }
       },
     });
-  }, [verificarFinRonda]);
+  }, [verificarFin]);
 
-  // Crear panResponders cuando cambian las figuras
+
+
+  // Crear panResponders cuando cambian las figuras (sin delay extra)
   useEffect(() => {
-    figuras.forEach(fig => {
-      if (!panResponders.current[fig.id]) {
-        panResponders.current[fig.id] = crearPanResponder(fig.id);
-      }
+    figuras.forEach(f => {
+      if (!prs.current[f.id]) prs.current[f.id] = crearPR(f.id);
     });
-  }, [figuras, crearPanResponder]);
+  }, [figuras]);
 
   if (terminado) {
-    const precision = aciertos + fallos > 0
-      ? Math.round((aciertos / (aciertos + fallos)) * 100)
-      : 0;
+    const prec = aciertos + fallos > 0 ? Math.round(aciertos / (aciertos + fallos) * 100) : 0;
     return (
       <View style={styles.finContainer}>
         <Stack.Screen options={{ headerShown: false }} />
         <Text style={styles.finTitulo}>⏱️ ¡Tiempo!</Text>
         <Text style={styles.finStat}>✅ Aciertos: {aciertos}</Text>
         <Text style={styles.finStat}>❌ Fallos: {fallos}</Text>
-        <Text style={styles.finStat}>🎯 Precisión: {precision}%</Text>
+        <Text style={styles.finStat}>🎯 Precisión: {prec}%</Text>
         <Text style={styles.finBoton} onPress={() => router.back()}>Volver</Text>
       </View>
     );
   }
 
-  const { nFiguras, nMoldes, label } = getDificultad(aciertos);
+  const { label } = getDificultad(aciertos);
 
   return (
-    <View
-      style={[styles.page, { position: "relative" }]}
-      onLayout={e => {
-        e.currentTarget.measure((_fx, _fy, _w, _h, _px, py) => {
-          pageOffsetY.current = py;
-        });
-      }}
-    >
+    <View style={styles.page}>
       <Stack.Screen options={{
         headerTitle: () => (
           <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-            <Text style={{ color: "#2b6cb0", fontWeight: "bold", fontSize: 17 }}>⏱️ {tiempo}s</Text>
-            <Text style={{ color: "green",   fontWeight: "bold", fontSize: 17 }}>✅ {aciertos}</Text>
-            <Text style={{ color: "red",     fontWeight: "bold", fontSize: 17 }}>❌ {fallos}</Text>
-            <Text style={{ fontWeight: "bold", fontSize: 13 }}>{label}</Text>
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 17 }}>⏱️ {tiempo}s</Text>
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 17 }}>✅ {aciertos}</Text>
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 17 }}>❌ {fallos}</Text>
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 13 }}>{label}</Text>
           </View>
         ),
-        headerStyle: { backgroundColor: "#ebf8ff" },
+        headerStyle: { backgroundColor: "#2b6cb0" },
         headerShadowVisible: false,
       }} />
 
-      {/* ZONA FIGURAS - solo el fondo y el label */}
-      <View style={styles.zonaFiguras}>
+      {/* Zona superior azul */}
+      <View
+        style={styles.zonaFiguras}
+        onLayout={e => {
+          // Guardamos dónde termina esta zona (y + height) = donde empieza zonaMoldes
+          moldesOffsetY.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height + 3; // +3 del divisor
+        }}
+      >
         <Text style={styles.instruccion}>Arrastra cada figura a su molde</Text>
       </View>
 
-      {/* FIGURAS: fuera de zonaFiguras para que no las corte overflow:hidden y pasen por encima de los moldes */}
+      <View style={styles.divisor} />
+
+      {/* Zona moldes */}
+      <View style={styles.zonaMoldes}>
+        <Text style={styles.instruccionMolde}>
+          {figuras.filter(f => !f.tieneMolde).length > 0
+            ? "⚠️ No todas las figuras encajan"
+            : "Encaja las figuras correctas"}
+        </Text>
+        <View style={styles.moldesRow}>
+          {moldes.map(molde => (
+            <View
+              key={molde.id}
+              style={[styles.moldeWrapper, molde.ocupado && styles.moldeOcupado]}
+              onLayout={e => {
+                const { x, y, width, height } = e.nativeEvent.layout;
+                // x,y son relativos al moldesRow
+                // El centro absoluto = offsetY de zona moldes + padding(16) + label(~34) + y local + height/2
+                // Para X: el moldesRow está centrado, calculamos su offset sumando padding horizontal
+                  const labelH = 34;
+                  const paddingTop = 16;
+                  const paddingH = 12;
+                  const rowWidth = moldes.length * (72 + 20) - 20;
+                  const rowOffsetX = (SW - rowWidth) / 2;
+                  molde.cx = rowOffsetX + paddingH + x + width / 2;
+                  molde.cy = moldesOffsetY.current + paddingTop + labelH + y + height / 2;
+              }}
+            >
+              {molde.ocupado
+                ? <Text style={{ fontSize: 30 }}>✨</Text>
+                : <RenderMolde tipo={molde.tipo} size={64} />}
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Figuras arrastrables encima de todo */}
       {figuras.map(fig => {
-        const pr = panResponders.current[fig.id];
-        if (!pr) return null;
+        const pr = prs.current[fig.id];
         return (
           <Animated.View
             key={fig.id}
-            {...pr.panHandlers}
+            {...(pr ? pr.panHandlers : {})}
             style={{
               position: "absolute",
               left: fig.pan.x,
@@ -370,46 +370,10 @@ export default function JuegoFiguras() {
               padding: 8,
             }}
           >
-            <RenderFigura tipo={fig.tipo} color={fig.color} size={48} />
+            <RenderFigura tipo={fig.tipo} size={48} />
           </Animated.View>
         );
       })}
-
-      <View style={styles.divisor} />
-
-      {/* ZONA MOLDES */}
-      <View style={styles.zonaMoldes}>
-        <Text style={styles.instruccionMolde}>
-          {nFiguras > nMoldes
-            ? `⚠️ Hay ${nFiguras} figuras pero solo ${nMoldes} moldes`
-            : "Encaja las figuras correctas"}
-        </Text>
-        <View style={styles.moldesRow}>
-          {moldes.map(molde => (
-            <View
-              key={molde.id}
-              ref={ref => { moldeRefs.current[molde.id] = ref; }}
-              style={[styles.moldeWrapper, molde.ocupado && styles.moldeOcupado]}
-              onLayout={() => {
-                setTimeout(() => {
-                  const ref = moldeRefs.current[molde.id];
-                  if (ref && ref.measure) {
-                    ref.measure((_fx: number, _fy: number, width: number, height: number, pageX: number, pageY: number) => {
-                      // Restamos el offset de la página para que coincida con el sistema de coordenadas de las figuras
-                      moldeLayouts.current[molde.id] = { x: pageX, y: pageY - pageOffsetY.current, w: width, h: height };
-                    });
-                  }
-                }, 100);
-              }}
-            >
-              {molde.ocupado
-                ? <Text style={{ fontSize: 28 }}>✨</Text>
-                : <RenderMolde tipo={molde.tipo} size={50} />
-              }
-            </View>
-          ))}
-        </View>
-      </View>
     </View>
   );
 }
