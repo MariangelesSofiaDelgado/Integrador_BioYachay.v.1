@@ -1,10 +1,9 @@
-import { useRouter, Stack } from "expo-router";
-import React, { useState, useRef, useEffect } from "react";
-import { Text, View, Pressable, PanResponder, Animated, LayoutChangeEvent } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, LayoutChangeEvent, PanResponder, Pressable, Text, View } from "react-native";
 import styles from "../visoespacial/styles/stylestutorial";
 
-// --- TAMAÑOS REALES Y EXACTOS EN PÍXELES ---
 const TAMANO_TRIANGULO = 55; 
 const TAMANO_CIRCULO = 45;   
 
@@ -24,7 +23,7 @@ const PASOS_TUTORIAL = {
   3: {
     titulo: "¡Excelente!",
     descripcion: "Has aprendido a encajar las formas perfectamente.",
-    indicacion: "🎯 Ya estás listo para poner a prueba tu percepción espacial con diferentes figuras, velocidades y desafíos. ¡A ganar!",
+    indicacion: "🎯 Ya estás listo para poner a prueba tu percepción espacial con diferentes figuras, velocidades and desafíos. ¡A ganar!",
     boton: "Finalizar",
   },
 };
@@ -35,124 +34,136 @@ export default function TutorialVisoespacial() {
   const [haMovidoPaso1, setHaMovidoPaso1] = useState(false);
   const [figuraEncajada, setFiguraEncajada] = useState(false);
 
-  // --- MEDIDAS RESPONSIVAS DEL CONTENEDOR GRIS ---
   const limites = useRef({ ancho: 0, alto: 0 });
 
-  // --- POSICIONES ANIMADAS NATIVAS ABSOLUTAS ---
   const panTriangulo = useRef(new Animated.ValueXY({ x: 40, y: 120 })).current;
   const panCirculo = useRef(new Animated.ValueXY({ x: 180, y: 120 })).current;
 
   const ultimaPosTriangulo = useRef({ x: 40, y: 120 });
   const ultimaPosCirculo = useRef({ x: 180, y: 120 });
+  const inicioGestoTriangulo = useRef({ x: 40, y: 120 });
+  const inicioGestoCirculo = useRef({ x: 180, y: 120 });
 
   const medirContenedorGris = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     limites.current = { ancho: width, alto: height };
   };
 
-  // --- REPOSICIONAR TRIÁNGULO AL ENTRAR AL PASO 2 ---
   useEffect(() => {
     if (paso === 2) {
-      // Centramos el triángulo en X y lo ponemos arriba en Y listo para bajar
-      const posXInicial = limites.current.ancho / 2 - TAMANO_TRIANGULO / 2 || 140;
-      const posYInicial = 40; 
-      
-      panTriangulo.setValue({ x: posXInicial, y: posYInicial });
-      ultimaPosTriangulo.current = { x: posXInicial, y: posYInicial };
+      const xCentro = limites.current.ancho / 2 - TAMANO_TRIANGULO / 2 || 140;
+      const posInicial = { x: xCentro, y: 30 };
+      panTriangulo.setValue(posInicial);
+      // Sincronizamos TODAS las refs con la nueva posición para evitar teleportación
+      ultimaPosTriangulo.current = { ...posInicial };
+      inicioGestoTriangulo.current = { ...posInicial };
+      setFiguraEncajada(false);
     }
   }, [paso]);
 
-  // --- TRATAMIENTO DE BORDES MATEMÁTICOS PERFECTOS ---
   const obtenerPosicionRestringida = (dx: number, dy: number, posInicial: { x: number, y: number }, esTriangulo: boolean) => {
     let nuevoX = posInicial.x + dx;
     let nuevoY = posInicial.y + dy;
 
     const tamano = esTriangulo ? TAMANO_TRIANGULO : TAMANO_CIRCULO;
 
-    // Límites Horizontales
     if (nuevoX < 0) nuevoX = 0;
     if (nuevoX > limites.current.ancho - tamano) nuevoX = limites.current.ancho - tamano;
-
-    // Límite Superior de -90 que te funcionó impecable
     if (nuevoY < -90) nuevoY = -90;
     if (nuevoY > limites.current.alto - tamano) nuevoY = limites.current.alto - tamano;
 
     return { x: nuevoX, y: nuevoY };
   };
 
-  // --- PANRESPONDER ÚNICO DEL TRIÁNGULO ---
+  const figuraEncajadaRef = useRef(false);
+  const pasoRef = useRef<1 | 2 | 3>(1);
+
+  useEffect(() => {
+    figuraEncajadaRef.current = figuraEncajada;
+  }, [figuraEncajada]);
+
+  useEffect(() => {
+    pasoRef.current = paso;
+  }, [paso]);
+
   const panResponderTriangulo = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !figuraEncajada,
-      onMoveShouldSetPanResponder: () => !figuraEncajada,
+      onStartShouldSetPanResponder: () => !figuraEncajadaRef.current,
+      onMoveShouldSetPanResponder: () => !figuraEncajadaRef.current,
+      onPanResponderGrant: () => {
+        // Leemos la posición animada real en este momento exacto y la guardamos
+        const x = (panTriangulo.x as any)._value ?? ultimaPosTriangulo.current.x;
+        const y = (panTriangulo.y as any)._value ?? ultimaPosTriangulo.current.y;
+        ultimaPosTriangulo.current = { x, y };
+        inicioGestoTriangulo.current = { x, y };
+      },
       onPanResponderMove: (_, gestureState) => {
-        if (paso === 1) {
+        if (pasoRef.current === 1) {
           setHaMovidoPaso1(true);
-          const posSegura = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, ultimaPosTriangulo.current, true);
+          const posSegura = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, inicioGestoTriangulo.current, true);
           panTriangulo.setValue(posSegura);
-        } else if (paso === 2) {
-          // En el paso 2 usamos el mismo movimiento absoluto controlado
-          const posSegura = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, ultimaPosTriangulo.current, true);
-          
-          // Bloqueamos el movimiento horizontal en paso 2 para que baje derecho (Opcional, si quieres libertad quita la línea de abajo)
-          posSegura.x = limites.current.ancho / 2 - TAMANO_TRIANGULO / 2;
-
+        } else if (pasoRef.current === 2) {
+          const posSegura = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, inicioGestoTriangulo.current, true);
           panTriangulo.setValue(posSegura);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (paso === 1) {
-          const posFinal = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, ultimaPosTriangulo.current, true);
+        if (pasoRef.current === 1) {
+          const posFinal = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, inicioGestoTriangulo.current, true);
           ultimaPosTriangulo.current = posFinal;
-        } else if (paso === 2) {
-          // 1. Obtenemos la posición exacta a donde el usuario llevó la figura
-          const posFinal = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, ultimaPosTriangulo.current, true);
-          
-          // 2. Coordenadas aproximadas del centro del molde punteado gris en pantalla
-          const centroMoldeX = limites.current.ancho / 2 - TAMANO_TRIANGULO / 2;
-          const centroMoldeY = 145; // Calibrado al ojo con tu layout actual
+        } else if (pasoRef.current === 2) {
+          const xCentro = limites.current.ancho / 2 - TAMANO_TRIANGULO / 2 || 140;
 
-          // 3. Margen de tolerancia generoso (Efecto Imán)
-          // Si el triángulo está a menos de 55px en vertical y 45px en horizontal, se auto-acomoda solo
-          const cercaEnX = Math.abs(posFinal.x - centroMoldeX) < 45;
-          const cercaEnY = Math.abs(posFinal.y - centroMoldeY) < 55;
+          // Posición absoluta real donde quedó el triángulo al soltar
+          const posActualY = inicioGestoTriangulo.current.y + gestureState.dy;
+          const posActualX = inicioGestoTriangulo.current.x + gestureState.dx;
 
-          if (cercaEnX && cercaEnY) {
-            // Animación magnética: Succiona la figura y la clava perfectamente centrada en el molde
+          const MOLDE_Y = 145;
+          const TOLERANCIA_Y = 40;
+          const TOLERANCIA_X = 40;
+
+          if (
+            posActualY >= MOLDE_Y - TOLERANCIA_Y && posActualY <= MOLDE_Y + TOLERANCIA_Y &&
+            posActualX >= xCentro - TOLERANCIA_X && posActualX <= xCentro + TOLERANCIA_X
+          ) {
+            // Encaja con efecto imán en la posición exacta del molde
             Animated.spring(panTriangulo, {
-              toValue: { x: centroMoldeX, y: centroMoldeY - 3 }, // Ajuste de -3px para que tape la silueta gris interna
-              useNativeDriver: false
+              toValue: { x: xCentro, y: MOLDE_Y },
+              useNativeDriver: false,
             }).start();
-            
+            ultimaPosTriangulo.current = { x: xCentro, y: MOLDE_Y };
             setFiguraEncajada(true);
+            figuraEncajadaRef.current = true;
           } else {
-            // Si lo suelta lejos de la zona del molde, regresa arriba con resorte
+            // No llegó al molde, regresa arriba suavemente
             Animated.spring(panTriangulo, {
-              toValue: { x: centroMoldeX, y: 40 },
-              useNativeDriver: false
+              toValue: { x: xCentro, y: 30 },
+              useNativeDriver: false,
             }).start();
-            ultimaPosTriangulo.current = { x: centroMoldeX, y: 40 };
+            ultimaPosTriangulo.current = { x: xCentro, y: 30 };
           }
         }
       },
     })
   ).current;
 
-  // --- PANRESPONDER DEL CÍRCULO ---
   const panResponderCirculo = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => paso === 1,
-      onMoveShouldSetPanResponder: () => paso === 1,
+      onStartShouldSetPanResponder: () => pasoRef.current === 1,
+      onMoveShouldSetPanResponder: () => pasoRef.current === 1,
+      onPanResponderGrant: () => {
+        inicioGestoCirculo.current = { ...ultimaPosCirculo.current };
+      },
       onPanResponderMove: (_, gestureState) => {
-        if (paso === 1) {
+        if (pasoRef.current === 1) {
           setHaMovidoPaso1(true);
-          const posSegura = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, ultimaPosCirculo.current, false);
+          const posSegura = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, inicioGestoCirculo.current, false);
           panCirculo.setValue(posSegura);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (paso === 1) {
-          const posFinal = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, ultimaPosCirculo.current, false);
+        if (pasoRef.current === 1) {
+          const posFinal = obtenerPosicionRestringida(gestureState.dx, gestureState.dy, inicioGestoCirculo.current, false);
           ultimaPosCirculo.current = posFinal;
         }
       },
@@ -190,36 +201,33 @@ export default function TutorialVisoespacial() {
           <View style={styles.tituloLinea} />
         </View>
         
-        {/* Espacio gris libre limpio */}
         <View style={[styles.espacioGrisLibre, { zIndex: 10 }]} onLayout={medirContenedorGris}>
           
-          {/* EL TRIÁNGULO AHORA EXISTE EN EL PLANO ABSOLUTO EN AMBOS PASOS */}
-          {(paso === 1 || paso === 2 || paso === 3) && (
-            <Animated.View
-              {...panResponderTriangulo.panHandlers}
-              style={[
-                {
-                  position: "absolute",
-                  left: panTriangulo.x,
-                  top: panTriangulo.y,
-                  zIndex: 30,
-                  width: 0,
-                  height: 0,
-                  backgroundColor: "transparent",
-                  borderStyle: "solid",
-                  borderLeftWidth: TAMANO_TRIANGULO / 2,
-                  borderRightWidth: TAMANO_TRIANGULO / 2,
-                  borderBottomWidth: TAMANO_TRIANGULO,
-                  borderLeftColor: "transparent",
-                  borderRightColor: "transparent",
-                  borderBottomColor: "#d53f8c",
-                  display: (paso === 2 && figuraEncajada) || paso === 3 ? "none" : "flex", // Oculta si ya encajó
-                }
-              ]}
-            />
-          )}
+          {/* TRIÁNGULO ANIMADO */}
+          <Animated.View
+            {...panResponderTriangulo.panHandlers}
+            style={[
+              {
+                position: "absolute",
+                left: panTriangulo.x,
+                top: panTriangulo.y,
+                zIndex: 30,
+                width: 0,
+                height: 0,
+                backgroundColor: "transparent",
+                borderStyle: "solid",
+                borderLeftWidth: TAMANO_TRIANGULO / 2,
+                borderRightWidth: TAMANO_TRIANGULO / 2,
+                borderBottomWidth: TAMANO_TRIANGULO,
+                borderLeftColor: "transparent",
+                borderRightColor: "transparent",
+                borderBottomColor: "#d53f8c",
+                display: paso === 3 ? "none" : "flex", 
+              }
+            ]}
+          />
 
-          {/* Círculo del Paso 1 */}
+          {/* CÍRCULO PASO 1 */}
           {paso === 1 && (
             <Animated.View
               {...panResponderCirculo.panHandlers}
@@ -238,23 +246,33 @@ export default function TutorialVisoespacial() {
             />
           )}
 
-          {/* EFECTO DE ÉXITO O MOLDE EN PASO 2 Y 3 */}
+          {/* MOLDE PASO 2 Y 3 */}
           {(paso === 2 || paso === 3) && (
             <View style={{ width: "100%", height: "100%", position: "absolute", alignItems: "center" }}>
               {figuraEncajada ? (
-                // Destellos de éxito en la posición exacta del molde
                 <Text style={{ fontSize: 45, zIndex: 40, position: "absolute", top: 145 }}>✨</Text>
               ) : (
-                /* El molde punteado fijo abajo con top corregido a 145 */
-                <View style={{ width: 65, height: 65, borderWidth: 2, borderColor: "#999", borderStyle: "dashed", borderRadius: 12, position: "absolute", top: 145, justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                <View style={{ 
+                  width: 65, 
+                  height: 65, 
+                  borderWidth: 2, 
+                  borderColor: "#999", 
+                  borderStyle: "dashed", 
+                  borderRadius: 12, 
+                  position: "absolute", 
+                  top: 145, 
+                  justifyContent: "center", 
+                  alignItems: "center", 
+                  zIndex: 5 
+                }}>
                   <View style={{ 
                     width: 0, 
                     height: 0, 
                     backgroundColor: "transparent", 
                     borderStyle: "solid", 
-                    borderLeftWidth: 51 / 2,  // 👈 Escalado a 51 para hacer match perfecto
-                    borderRightWidth: 51 / 2, // 👈 Escalado a 51
-                    borderBottomWidth: 51,    // 👈 Escalado a 51
+                    borderLeftWidth: 51 / 2, 
+                    borderRightWidth: 51 / 2, 
+                    borderBottomWidth: 51, 
                     borderLeftColor: "transparent", 
                     borderRightColor: "transparent", 
                     borderBottomColor: "#ccc", 
