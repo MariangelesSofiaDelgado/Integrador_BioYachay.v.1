@@ -1,8 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Text, View } from "react-native";
+import { Animated, Dimensions, PanResponder, Text, View } from "react-native";
 import styles from "./styles/stylesjuego";
-import { PanResponder } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -32,11 +31,14 @@ export default function Juego() {
   useEffect(() => { puntosRef.current = puntos; }, [puntos]);
   useEffect(() => { fallosRef.current = fallos; }, [fallos]);
 
+  // Ancho visual de la canasta (fontSize 52) como % del ancho de pantalla
+  const MARGEN_CANASTA = (52 / SCREEN_WIDTH) * 100;
+
   const obtenerConfiguracionDificultad = () => {
     const totalIntentos = puntosRef.current + fallosRef.current;
-    if (totalIntentos > 22) return { intervalo: 300, duracion: 1100, margen: 40, label: "🔥 Difícil" };
-    if (totalIntentos > 12) return { intervalo: 550, duracion: 1500, margen: 35, label: "⚡ Medio" };
-    return { intervalo: 900, duracion: 2000, margen: 28, label: "🌱 Fácil" };
+    if (totalIntentos > 22) return { intervalo: 300, duracion: 1100, margen: MARGEN_CANASTA, label: "🔥 Difícil" };
+    if (totalIntentos > 12) return { intervalo: 550, duracion: 1500, margen: MARGEN_CANASTA, label: "⚡ Medio" };
+    return { intervalo: 900, duracion: 2000, margen: MARGEN_CANASTA, label: "🌱 Fácil" };
   };
 
   const panResponder = useRef(
@@ -92,7 +94,7 @@ export default function Juego() {
       anim.addListener(({ value }) => {
         // Zona de captura: cuando la fruta está entre 78% y 88% de su caída
         // (antes de llegar al fondo), comprobamos si la canasta está debajo
-        if (!atrapada && value >= 78 && value <= 88) {
+        if (!atrapada && value >= 85 && value <= 90) {
           const distancia = Math.abs(newX - canastaXValue.current);
           if (distancia < margen) {
             atrapada = true;
