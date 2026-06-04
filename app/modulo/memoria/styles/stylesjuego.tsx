@@ -30,12 +30,12 @@ export default StyleSheet.create({
   statLabel: { 
     fontSize: 10, 
     fontWeight: 'bold', 
-    color: '#7f8c8d' 
+    color: '#549be5' 
   },
   statValue: { 
     fontSize: 20, 
     fontWeight: '900', 
-    color: '#2f5279' 
+    color: '#549be5' 
   },
   bannerMemo: { 
     backgroundColor: '#e67e22', 
@@ -57,7 +57,7 @@ export default StyleSheet.create({
     width: 55, 
     height: 75, 
     margin: 5,
-    backgroundColor: "#2f5279", 
+    backgroundColor: "#549be5", 
     justifyContent: 'center', 
     alignItems: 'center', 
     borderRadius: 10 
@@ -65,7 +65,7 @@ export default StyleSheet.create({
   cartaActiva: { 
     backgroundColor: "#fff", 
     borderWidth: 2, 
-    borderColor: "#2f5279" 
+    borderColor: "#549be5" 
   },
   textoCarta: { 
     fontSize: 28 
