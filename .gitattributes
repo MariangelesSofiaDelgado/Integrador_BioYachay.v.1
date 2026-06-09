@@ -1,8 +1,0 @@
-# Auto-detect text files and normalize line endings in the repository
-* text=auto
-
-# Ensure source files use text normalization
-*.ts text
-*.tsx text
-*.js text
-*.jsx text

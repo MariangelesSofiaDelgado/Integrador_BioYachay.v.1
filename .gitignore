@@ -41,3 +41,15 @@ app-example
 # generated native folders
 /ios
 /android
+# Backend compilado
+backend/target/
+
+# Node modules
+mobile/node_modules/
+
+# Expo
+mobile/.expo/
+mobile/dist/
+
+# Scripts generados
+scripts/polyfills.js
