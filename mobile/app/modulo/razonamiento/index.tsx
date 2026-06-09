@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -12,6 +11,69 @@ import {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
+const BLUE = "#337ab7";
+const CARTA_SIZE = 54;
+
+// ─── Fondo animado con números flotando ──────────────────────────────────────
+const BG_NUMS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "🧮", "➕", "🎯"];
+
+function FondoAnimado() {
+  const items = useRef(
+    Array.from({ length: 12 }, (_, i) => ({
+      symbol: BG_NUMS[i % BG_NUMS.length],
+      x: Math.random() * (SCREEN_WIDTH - 40),
+      anim: new Animated.Value(Math.random()),
+      duracion: 4000 + Math.random() * 4000,
+      size: 20 + Math.random() * 16,
+      opacity: 0.08 + Math.random() * 0.10,
+    }))
+  ).current;
+
+  useEffect(() => {
+    items.forEach((item) => {
+      const loop = () => {
+        item.anim.setValue(0);
+        Animated.timing(item.anim, {
+          toValue: 1,
+          duration: item.duracion,
+          useNativeDriver: true,
+        }).start(loop);
+      };
+      item.anim.setValue(Math.random());
+      Animated.timing(item.anim, {
+        toValue: 1,
+        duration: item.duracion,
+        useNativeDriver: true,
+      }).start(loop);
+    });
+  }, []);
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {items.map((item, i) => {
+        const translateY = item.anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [SCREEN_HEIGHT * 0.6, -60],
+        });
+        return (
+          <Animated.Text
+            key={i}
+            style={{
+              position: "absolute",
+              left: item.x,
+              fontSize: item.size,
+              opacity: item.opacity,
+              transform: [{ translateY }],
+            }}
+          >
+            {item.symbol}
+          </Animated.Text>
+        );
+      })}
+    </View>
+  );
+}
+
 // ─── Ficha animada ────────────────────────────────────────────────────────────
 function Ficha({
   numero,
@@ -24,8 +86,8 @@ function Ficha({
   onPress?: () => void;
   delay?: number;
 }) {
-  const scale   = useRef(new Animated.Value(0)).current;
-  const press   = useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(0)).current;
+  const press = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     setTimeout(() => {
@@ -45,12 +107,12 @@ function Ficha({
     <Pressable onPress={onPress}>
       <Animated.View
         style={[
-          localS.ficha,
-          seleccionada && localS.fichaSeleccionada,
+          Sc.ficha,
+          seleccionada && Sc.fichaSeleccionada,
           { transform: [{ scale: Animated.multiply(scale, press) }] },
         ]}
       >
-        <Text style={[localS.fichaNum, seleccionada && { color: "#fff" }]}>
+        <Text style={[Sc.fichaNum, seleccionada && { color: "#fff" }]}>
           {numero}
         </Text>
       </Animated.View>
@@ -79,34 +141,49 @@ function Paso1Demo() {
   }, []);
 
   return (
-    <View style={localS.demoWrap}>
-      <Text style={localS.demoSubtitulo}>El número objetivo</Text>
+    <View style={Sc.demoWrap}>
+      <Animated.View style={[Sc.labelBadge, { transform: [{ scale: pulso }] }]}>
+        <Text style={Sc.labelBadgeText}>🎯 El número objetivo</Text>
+      </Animated.View>
 
-      {/* Círculo objetivo igual al juego real */}
-      <Animated.View style={[localS.outerCircle, { transform: [{ scale: pulso }] }]}>
-        <View style={localS.innerCircle}>
-          <Text style={localS.targetNum}>13</Text>
+      <Animated.View style={[Sc.outerCircle, { transform: [{ scale: pulso }] }]}>
+        <View style={Sc.innerCircle}>
+          <Text style={Sc.targetNum}>13</Text>
         </View>
       </Animated.View>
 
-      <Animated.Text style={[localS.flecha, { transform: [{ translateY: flechaY }] }]}>
+      <Animated.Text style={[Sc.flecha, { transform: [{ translateY: flechaY }] }]}>
         👆
       </Animated.Text>
-      <Text style={localS.demoHint}>Debes llegar exactamente a este número</Text>
+      <Text style={Sc.demoHint}>Debes llegar exactamente a este número</Text>
     </View>
   );
 }
 
 // ─── PASO 2: Interactivo – toca fichas para sumar ────────────────────────────
-function Paso2Demo({ onCompleto }: { onCompleto: () => void }) {
-  const NUMEROS  = [4, 6, 2, 7, 3, 5];
-  const OBJETIVO = 13; // 4 + 2 + 7
+const NUMEROS_PASO2  = [4, 6, 2, 7, 3, 5];
+const OBJETIVO_PASO2 = 13;
 
+function Paso2Demo({ onCompleto }: { onCompleto: () => void }) {
   const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
   const [sumaActual, setSumaActual]       = useState(0);
   const [estado, setEstado]               = useState<"jugando" | "ok" | "error">("jugando");
   const shakeX  = useRef(new Animated.Value(0)).current;
   const yaGano  = useRef(false);
+
+  const notifO = useRef(new Animated.Value(0)).current;
+  const notifY = useRef(new Animated.Value(0)).current;
+  const [notifVisible, setNotifVisible] = useState(false);
+
+  const mostrarNotif = () => {
+    setNotifVisible(true);
+    notifO.setValue(1);
+    notifY.setValue(0);
+    Animated.sequence([
+      Animated.timing(notifY, { toValue: -20, duration: 500, useNativeDriver: true }),
+      Animated.timing(notifO, { toValue: 0,   duration: 400, useNativeDriver: true }),
+    ]).start(() => setNotifVisible(false));
+  };
 
   const shake = () => {
     Animated.sequence([
@@ -120,26 +197,26 @@ function Paso2Demo({ onCompleto }: { onCompleto: () => void }) {
   const tocarFicha = (idx: number) => {
     if (estado !== "jugando") return;
 
-    // Deseleccionar
     if (seleccionadas.includes(idx)) {
       const nuevas = seleccionadas.filter(i => i !== idx);
       setSeleccionadas(nuevas);
-      setSumaActual(nuevas.reduce((a, i) => a + NUMEROS[i], 0));
+      setSumaActual(nuevas.reduce((a, i) => a + NUMEROS_PASO2[i], 0));
       return;
     }
 
-    const nuevasSel  = [...seleccionadas, idx];
-    const nuevaSuma  = nuevasSel.reduce((a, i) => a + NUMEROS[i], 0);
+    const nuevasSel = [...seleccionadas, idx];
+    const nuevaSuma = nuevasSel.reduce((a, i) => a + NUMEROS_PASO2[i], 0);
     setSeleccionadas(nuevasSel);
     setSumaActual(nuevaSuma);
 
-    if (nuevaSuma === OBJETIVO) {
+    if (nuevaSuma === OBJETIVO_PASO2) {
       if (!yaGano.current) {
         yaGano.current = true;
         setEstado("ok");
+        mostrarNotif();
         setTimeout(() => onCompleto(), 800);
       }
-    } else if (nuevaSuma > OBJETIVO) {
+    } else if (nuevaSuma > OBJETIVO_PASO2) {
       shake();
       setEstado("error");
       setTimeout(() => {
@@ -151,46 +228,43 @@ function Paso2Demo({ onCompleto }: { onCompleto: () => void }) {
   };
 
   return (
-    <View style={localS.demoWrap}>
-      {/* Objetivo */}
-      <View style={localS.filaSuma}>
-        <View style={[localS.outerCircle, { width: 64, height: 64 }]}>
-          <View style={[localS.innerCircle, { width: 52, height: 52, borderRadius: 26 }]}>
-            <Text style={[localS.targetNum, { fontSize: 22 }]}>{OBJETIVO}</Text>
+    <View style={Sc.demoWrap}>
+      <View style={Sc.labelBadge}>
+        <Text style={Sc.labelBadgeText}>
+          {estado === "ok"
+            ? "✅ ¡Par encontrado!"
+            : estado === "error"
+            ? "❌ ¡Te pasaste!"
+            : sumaActual > 0
+            ? `Suma: ${sumaActual} — faltan ${OBJETIVO_PASO2 - sumaActual}`
+            : "🔢 Toca las fichas para sumar 13"}
+        </Text>
+      </View>
+
+      <View style={Sc.filaSuma}>
+        <View style={Sc.outerCircle}>
+          <View style={Sc.innerCircle}>
+            <Text style={Sc.targetNum}>{OBJETIVO_PASO2}</Text>
           </View>
         </View>
-        <Text style={localS.igualSigno}>=</Text>
+        <Text style={Sc.igualSigno}>=</Text>
         <View style={[
-          localS.sumaBox,
-          sumaActual === OBJETIVO && { borderColor: "#7dc123", backgroundColor: "#f0fdf4" },
-          sumaActual >  OBJETIVO && { borderColor: "#e93232", backgroundColor: "#fff0f0" },
+          Sc.sumaBox,
+          sumaActual === OBJETIVO_PASO2 && { borderColor: "#7dc123", backgroundColor: "#f0fdf4" },
+          sumaActual >  OBJETIVO_PASO2  && { borderColor: "#e93232", backgroundColor: "#fff0f0" },
         ]}>
           <Text style={[
-            localS.sumaNum,
-            sumaActual === OBJETIVO && { color: "#7dc123" },
-            sumaActual >  OBJETIVO  && { color: "#e93232" },
+            Sc.sumaNum,
+            sumaActual === OBJETIVO_PASO2 && { color: "#7dc123" },
+            sumaActual >  OBJETIVO_PASO2  && { color: "#e93232" },
           ]}>
             {sumaActual}
           </Text>
         </View>
       </View>
 
-      {estado === "ok" && (
-        <Text style={localS.mensajeOk}>🎉 ¡Correcto! {NUMEROS.filter((_, i) => seleccionadas.includes(i)).join(" + ")} = {OBJETIVO}</Text>
-      )}
-      {estado === "error" && (
-        <Text style={localS.mensajeError}>❌ ¡Te pasaste! Intenta otra combinación</Text>
-      )}
-      {estado === "jugando" && sumaActual === 0 && (
-        <Text style={localS.demoHint}>Toca las fichas para sumar</Text>
-      )}
-      {estado === "jugando" && sumaActual > 0 && sumaActual < OBJETIVO && (
-        <Text style={localS.demoHint}>Suma: {sumaActual} — faltan {OBJETIVO - sumaActual}</Text>
-      )}
-
-      {/* Fichas */}
-      <Animated.View style={[localS.gridFichas, { transform: [{ translateX: shakeX }] }]}>
-        {NUMEROS.map((n, i) => (
+      <Animated.View style={[Sc.gridFichas, { transform: [{ translateX: shakeX }] }]}>
+        {NUMEROS_PASO2.map((n, i) => (
           <Ficha
             key={i}
             numero={n}
@@ -200,6 +274,12 @@ function Paso2Demo({ onCompleto }: { onCompleto: () => void }) {
           />
         ))}
       </Animated.View>
+
+      {notifVisible && (
+        <Animated.Text style={[Sc.notifPar, { opacity: notifO, transform: [{ translateY: notifY }] }]}>
+          ✅ ¡Correcto! {NUMEROS_PASO2.filter((_, i) => seleccionadas.includes(i)).join(" + ")} = {OBJETIVO_PASO2}
+        </Animated.Text>
+      )}
     </View>
   );
 }
@@ -207,10 +287,10 @@ function Paso2Demo({ onCompleto }: { onCompleto: () => void }) {
 // ─── PASO 3: Reglas finales ───────────────────────────────────────────────────
 function Paso3Demo() {
   const reglas = [
-    { icono: "🎯", texto: "Toca los números que sumen exactamente el objetivo." },
-    { icono: "↩️", texto: "Toca una ficha ya seleccionada para deseleccionarla." },
-    { icono: "💥", texto: "Si te pasas del objetivo, se reinician las selecciones." },
-    { icono: "⏱️", texto: "Tienes 60 segundos. ¡Haz el mayor número de aciertos!" },
+    { label: "Regla 1", texto: "Toca números que sumen el objetivo",  color: "#4ade80" },
+    { label: "Regla 2", texto: "Deselecciona tocando de nuevo",        color: "#60a5fa" },
+    { label: "Regla 3", texto: "Si te pasas, se reinicia la selección", color: "#a78bfa" },
+    { label: "Regla 4", texto: "60 segundos. ¡Haz el mayor puntaje!",  color: "#fb923c" },
   ];
   const scales = reglas.map(() => useRef(new Animated.Value(0)).current);
 
@@ -223,70 +303,59 @@ function Paso3Demo() {
   }, []);
 
   return (
-    <View style={localS.demoWrap}>
-      <Text style={localS.demoSubtitulo}>Reglas del juego</Text>
+    <View style={Sc.demoWrap}>
+      <Text style={Sc.paso3Titulo}>Reglas del juego</Text>
       {reglas.map((r, i) => (
-        <Animated.View key={i} style={[localS.reglaRow, { transform: [{ scale: scales[i] }] }]}>
-          <Text style={localS.reglaIcono}>{r.icono}</Text>
-          <Text style={localS.reglaTexto}>{r.texto}</Text>
+        <Animated.View key={i} style={[Sc.nivelRow, { transform: [{ scale: scales[i] }] }]}>
+          <View style={[Sc.nivelDot, { backgroundColor: r.color }]} />
+          <Text style={Sc.nivelLabel}>{r.label}</Text>
+          <Text style={Sc.reglaTexto}>{r.texto}</Text>
         </Animated.View>
       ))}
     </View>
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-export default function TutorialSuma() {
+// ─── Pantalla del tutorial interactivo (3 pasos) ──────────────────────────────
+function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
   const router = useRouter();
   const [paso, setPaso]                   = useState(1);
   const [paso2Completo, setPaso2Completo] = useState(false);
 
-  const obtenerTextosPaso = () => {
-    switch (paso) {
-      case 1:
-        return {
-          titulo: "Paso 1 de 3",
-          descripcion: "Verás un número objetivo dentro de un círculo. ¡Debes llegar exactamente a ese número!",
-          indicacion: "👆 Observa el círculo de arriba. Ese es tu objetivo en cada ronda.",
-          boton: "Entendido 👍",
-          disabled: false,
-        };
-      case 2:
-        return {
-          titulo: "Paso 2 de 3",
-          descripcion: paso2Completo
-            ? "🎉 ¡Perfecto! Eso es exactamente cómo se juega."
-            : "Toca las fichas para ir sumando. Llega exactamente al número objetivo.",
-          indicacion: paso2Completo
-            ? "👉 Presiona Siguiente para ver las reglas finales."
-            : "🔢 ¡Toca los números de arriba para sumar 13!",
-          boton: paso2Completo ? "Siguiente ➡️" : "Encuentra la suma... 🔢",
-          disabled: !paso2Completo,
-        };
-      case 3:
-        return {
-          titulo: "Paso 3 de 3",
-          descripcion: "¡Has completado el tutorial! Ya sabes todo lo que necesitas para jugar.",
-          indicacion: "🏆 ¿Listo para poner a prueba tu razonamiento?",
-          boton: "¡A jugar! 🧮",
-          disabled: false,
-        };
-      default:
-        return { titulo: "", descripcion: "", indicacion: "", boton: "", disabled: false };
-    }
-  };
+  const INFO = {
+    1: {
+      descripcion: "Verás un número objetivo. ¡Debes llegar exactamente a ese número!",
+      instrucciones: [
+        "🎯 El número objetivo aparece en el círculo.",
+        "🔢 Selecciona fichas para ir sumando.",
+        "✅ Llega exactamente al número para ganar.",
+      ],
+    },
+    2: {
+      descripcion: "Toca las fichas para ir sumando. Llega exactamente al número objetivo.",
+      instrucciones: [
+        "🃏 Toca una ficha para seleccionarla.",
+        "↩️ Toca de nuevo para deseleccionarla.",
+        "💥 Si te pasas, se reinicia la selección.",
+      ],
+    },
+    3: {
+      descripcion: "¡Supera los niveles sumando con rapidez!",
+      instrucciones: [
+        "⏱️ Tienes 60 segundos por partida.",
+        "📈 El objetivo cambia en cada ronda.",
+        "🏆 ¡Haz el mayor número de aciertos!",
+      ],
+    },
+  } as const;
 
-  const avanzarPaso = () => {
-    if (paso === 1) {
-      setPaso(2);
-    } else if (paso === 2) {
-      if (paso2Completo) setPaso(3);
-    } else {
-      router.push("/modulo/razonamiento");
-    }
-  };
+  const info     = INFO[paso as 1 | 2 | 3];
+  const disabled = paso === 2 ? !paso2Completo : false;
 
-  const infoPaso = obtenerTextosPaso();
+  const avanzar = () => {
+    if (paso < 3) setPaso(p => p + 1);
+    else { onCerrar(); router.push("/modulo/razonamiento/juego"); }
+  };
 
   return (
     <View style={S.page}>
@@ -300,50 +369,118 @@ export default function TutorialSuma() {
         }}
       />
 
-      {/* ── Zona superior interactiva ── */}
       <View style={S.zonaSuperior}>
-        <Text style={S.titulo}>Juego de Suma</Text>
+        <FondoAnimado />
+        <Text style={S.titulo}>Módulo Tutorial</Text>
         <View style={S.tituloLinea} />
-
         {paso === 1 && <Paso1Demo />}
         {paso === 2 && <Paso2Demo onCompleto={() => setPaso2Completo(true)} />}
         {paso === 3 && <Paso3Demo />}
       </View>
 
-      {/* ── Tarjeta blanca inferior ── */}
       <View style={S.contenedor}>
         <View style={S.headerRow}>
-          <View style={S.pasoContenedor}>
-            <Text style={S.pasoTitulo}>{infoPaso.titulo}</Text>
+          <View style={S.pasoBadge}>
+            <Text style={S.pasoBadgeTexto}>Paso {paso} de 3</Text>
           </View>
-          <Ionicons name="school" size={30} color="#faa638" />
+          <Text style={S.ojoIcono}>🧮</Text>
         </View>
 
-        <View style={S.objectContenedor}>
-          <Text style={S.objetivoDescripcion}>{infoPaso.descripcion}</Text>
+        <View style={S.descripcionBox}>
+          <Text style={S.descripcionTexto}>{info.descripcion}</Text>
         </View>
 
-        <View style={S.indicaciones}>
-          <Text style={S.indicacion}>{infoPaso.indicacion}</Text>
+        <View style={S.instruccionesBadge}>
+          <Text style={S.instruccionesBadgeTexto}>Instrucciones</Text>
+        </View>
+
+        <View style={S.listaInstrucciones}>
+          {info.instrucciones.map((linea, i) => (
+            <Text key={i} style={S.instruccionLinea}>{linea}</Text>
+          ))}
         </View>
 
         <View style={S.filaBotones}>
-          <View style={[S.botonBaseIniciar, infoPaso.disabled && { backgroundColor: "#aaa" }]}>
-            <Pressable
-              style={[S.botonIniciar, infoPaso.disabled && { backgroundColor: "#ccc" }]}
-              onPress={avanzarPaso}
-              disabled={infoPaso.disabled}
-            >
-              <Text style={S.textoBoton}>{infoPaso.boton}</Text>
-            </Pressable>
-          </View>
+          <Pressable style={S.botonIzq} onPress={onCerrar}>
+            <Text style={S.textoBoton}>← Volver</Text>
+          </Pressable>
+          <Pressable
+            style={[S.botonDer, disabled && S.botonDeshabilitado]}
+            onPress={avanzar}
+            disabled={disabled}
+          >
+            <Text style={S.textoBoton}>{paso < 3 ? "Siguiente ➡️" : "¡A jugar! 🧮"}</Text>
+          </Pressable>
         </View>
       </View>
     </View>
   );
 }
 
-// ─── Estilos de pantalla (copia exacta de stylesindex) ────────────────────────
+// ─── Pantalla de inicio del módulo ───────────────────────────────────────────
+export default function TutorialSuma() {
+  const router = useRouter();
+  const [verTutorial, setVerTutorial] = useState(false);
+
+  if (verTutorial) {
+    return <PantallaTutorial onCerrar={() => setVerTutorial(false)} />;
+  }
+
+  return (
+    <View style={S.page}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: "",
+          headerStyle: { backgroundColor: "#337ab7" },
+          headerTintColor: "#ffffff",
+          headerShadowVisible: false,
+        }}
+      />
+
+      <View style={S.zonaSuperior}>
+        <FondoAnimado />
+        <Text style={S.titulo}>Juego de Suma</Text>
+        <View style={S.tituloLinea} />
+        <Paso1Demo />
+      </View>
+
+      <View style={S.contenedor}>
+        <View style={S.headerRow}>
+          <View style={S.pasoBadge}>
+            <Text style={S.pasoBadgeTexto}>Objetivo</Text>
+          </View>
+          <Text style={S.ojoIcono}>🧮</Text>
+        </View>
+
+        <View style={S.descripcionBox}>
+          <Text style={S.descripcionTexto}>Suma fichas hasta alcanzar el número objetivo.</Text>
+        </View>
+
+        <View style={S.instruccionesBadge}>
+          <Text style={S.instruccionesBadgeTexto}>Instrucciones</Text>
+        </View>
+
+        <View style={S.listaInstrucciones}>
+          <Text style={S.instruccionLinea}>🎯 Observa el número objetivo en el círculo.</Text>
+          <Text style={S.instruccionLinea}>🔢 Toca fichas para sumar exactamente ese número.</Text>
+          <Text style={S.instruccionLinea}>⏱️ ¡Haz el mayor número de aciertos a tiempo!</Text>
+        </View>
+
+        <View style={S.filaBotones}>
+          <Pressable style={S.botonIzq} onPress={() => setVerTutorial(true)}>
+            <Text style={S.textoBoton}>Tutorial</Text>
+          </Pressable>
+          <Pressable style={S.botonDer} onPress={() => router.push("/modulo/razonamiento/juego")}>
+            <Text style={S.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─── Estilos pantalla ─────────────────────────────────────────────────────────
 const S = StyleSheet.create({
   page: {
     flex: 1,
@@ -352,15 +489,15 @@ const S = StyleSheet.create({
   zonaSuperior: {
     flex: 0.60,
     width: "100%",
-    position: "relative",
     justifyContent: "flex-start",
     alignItems: "flex-start",
     paddingTop: 20,
+    overflow: "hidden",
   },
   titulo: {
-    fontSize: 34,
-    fontWeight: "700",
-    color: "#e93232",
+    fontSize: 36,
+    fontWeight: "800",
+    color: BLUE,
     width: "100%",
     textAlign: "center",
     marginBottom: 4,
@@ -368,105 +505,127 @@ const S = StyleSheet.create({
   tituloLinea: {
     width: 200,
     height: 3,
-    backgroundColor: "#e93232",
+    backgroundColor: "#337ab7",
     borderRadius: 999,
     alignSelf: "center",
+    marginBottom: 4,
   },
   contenedor: {
     flex: 0.40,
     backgroundColor: "#ffffff",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    paddingTop: 15,
-    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingHorizontal: 20,
     paddingBottom: 20,
     justifyContent: "space-between",
     elevation: 8,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  pasoContenedor: {
+  pasoBadge: {
     backgroundColor: "#7dc123",
     paddingVertical: 5,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+  },
+  pasoBadgeTexto: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+  ojoIcono: {
+    fontSize: 22,
+  },
+  descripcionBox: {
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
   },
-  pasoTitulo: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  objectContenedor: {
-    backgroundColor: "#f6f6f6",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-  },
-  objetivoDescripcion: {
-    fontSize: 17,
-    color: "#333",
+  descripcionTexto: {
+    fontSize: 16,
+    color: "#333333",
     fontWeight: "500",
   },
-  indicaciones: {
-    marginVertical: 2,
+  instruccionesBadge: {
+    backgroundColor: "#337ab7",
+    alignSelf: "flex-start",
+    paddingVertical: 5,
+    paddingHorizontal: 16,
+    borderRadius: 999,
   },
-  indicacion: {
-    fontSize: 17,
-    color: "#444",
+  instruccionesBadgeTexto: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+  listaInstrucciones: {
+    gap: 3,
+    marginTop: -2,
+  },
+  instruccionLinea: {
+    fontSize: 15,
+    color: "#444444",
     fontWeight: "500",
   },
   filaBotones: {
-    width: "100%",
+    flexDirection: "row",
+    gap: 12,
   },
-  botonBaseIniciar: {
-    backgroundColor: "#ce540e",
-    borderRadius: 20,
-    paddingVertical: 2,
-  },
-  botonIniciar: {
+  botonIzq: {
+    flex: 1,
+    backgroundColor: "#e93232",
+    borderRadius: 999,
+    paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
+  },
+  botonDer: {
+    flex: 1,
     backgroundColor: "#faa638",
-    paddingVertical: 10,
-    borderRadius: 20,
-    position: "relative",
-    top: -5,
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  botonDeshabilitado: {
+    backgroundColor: "#cccccc",
   },
   textoBoton: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    color: "#ffffff",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });
 
-// ─── Estilos locales solo para las demos ──────────────────────────────────────
-const localS = StyleSheet.create({
+// ─── Estilos demos ────────────────────────────────────────────────────────────
+const Sc = StyleSheet.create({
   demoWrap: {
     flex: 1,
-    width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    width: "100%",
   },
-  demoSubtitulo: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#337ab7",
-    marginBottom: 10,
-    letterSpacing: 0.3,
+  labelBadge: {
+    backgroundColor: "rgba(51,122,183,0.12)",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 12,
   },
-  demoHint: {
+  labelBadgeText: {
     fontSize: 13,
-    color: "#666",
-    marginBottom: 8,
-    fontWeight: "500",
+    fontWeight: "700",
+    color: BLUE,
   },
 
   // Círculo objetivo
@@ -474,11 +633,11 @@ const localS = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: "#337ab7",
+    backgroundColor: BLUE,
     alignItems: "center",
     justifyContent: "center",
     elevation: 6,
-    shadowColor: "#337ab7",
+    shadowColor: BLUE,
     shadowOpacity: 0.4,
     shadowRadius: 8,
   },
@@ -500,13 +659,19 @@ const localS = StyleSheet.create({
     marginTop: 4,
     marginBottom: 2,
   },
+  demoHint: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 6,
+    fontWeight: "500",
+  },
 
-  // Fila suma paso 2
+  // Fila suma
   filaSuma: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   igualSigno: {
     fontSize: 24,
@@ -528,18 +693,6 @@ const localS = StyleSheet.create({
     fontWeight: "900",
     color: "#555",
   },
-  mensajeOk: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#7dc123",
-    marginBottom: 4,
-  },
-  mensajeError: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#e93232",
-    marginBottom: 4,
-  },
 
   // Grid fichas
   gridFichas: {
@@ -550,22 +703,22 @@ const localS = StyleSheet.create({
     marginTop: 6,
   },
   ficha: {
-    width: 52,
-    height: 52,
+    width: CARTA_SIZE,
+    height: CARTA_SIZE,
     margin: 5,
     borderRadius: 12,
     backgroundColor: "#fff",
     borderWidth: 2,
-    borderColor: "#337ab7",
+    borderColor: BLUE,
     alignItems: "center",
     justifyContent: "center",
     elevation: 3,
-    shadowColor: "#337ab7",
+    shadowColor: BLUE,
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   fichaSeleccionada: {
-    backgroundColor: "#337ab7",
+    backgroundColor: BLUE,
     borderColor: "#2f5279",
   },
   fichaNum: {
@@ -574,18 +727,30 @@ const localS = StyleSheet.create({
     color: "#2f5279",
   },
 
-  // Reglas paso 3
-  reglaRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    marginBottom: 10,
-    width: Math.min(SCREEN_WIDTH - 48, 320),
-    backgroundColor: "#f6f6f6",
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  // Notificación
+  notifPar: {
+    position: "absolute",
+    bottom: 10,
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#16a34a",
   },
-  reglaIcono: { fontSize: 20 },
-  reglaTexto: { flex: 1, fontSize: 14, color: "#444", fontWeight: "500", lineHeight: 20 },
+
+  // Paso 3
+  paso3Titulo: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#1A1033",
+    marginBottom: 14,
+  },
+  nivelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 8,
+    width: Math.min(SCREEN_WIDTH - 48, 320),
+  },
+  nivelDot:  { width: 10, height: 10, borderRadius: 5 },
+  nivelLabel: { fontSize: 12, fontWeight: "700", color: "#444", width: 52 },
+  reglaTexto: { flex: 1, fontSize: 13, color: "#555", fontWeight: "500" },
 });
