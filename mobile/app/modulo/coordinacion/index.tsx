@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Dimensions, Pressable, Text, View } from "react-native";
@@ -7,7 +7,7 @@ import styles from "./styles/stylesindex";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const FRUTAS = ["🍎", "🍌", "🍇", "🍓", "🍊", "🥝", "🍍", "🍉"];
-const CANTIDAD_FRUTAS = 5; 
+const CANTIDAD_FRUTAS = 5;
 
 export default function ModuloCoordinacion() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function ModuloCoordinacion() {
   const frutasConfig = useRef(
     Array.from({ length: CANTIDAD_FRUTAS }, () => ({
       icono: FRUTAS[Math.floor(Math.random() * FRUTAS.length)],
-      left: Math.random() * 82, 
+      left: Math.random() * 82,
     }))
   ).current;
 
@@ -45,11 +45,11 @@ export default function ModuloCoordinacion() {
       if (!esPrimeraVez) {
         frutasAnims[index].setValue(-60);
         frutasConfig[index].icono = FRUTAS[Math.floor(Math.random() * FRUTAS.length)],
-        frutasConfig[index].left = Math.random() * 82;
+          frutasConfig[index].left = Math.random() * 82;
       }
 
       Animated.timing(frutasAnims[index], {
-        toValue: SCREEN_HEIGHT, 
+        toValue: SCREEN_HEIGHT,
         duration: 2400 + Math.random() * 800,
         useNativeDriver: true,
       }).start(({ finished }) => {
@@ -60,7 +60,7 @@ export default function ModuloCoordinacion() {
     };
 
     frutasAnims.forEach((_, index) => {
-      animarFrutaIndividual(index, true); 
+      animarFrutaIndividual(index, true);
     });
 
     return () => {
@@ -72,7 +72,7 @@ export default function ModuloCoordinacion() {
   // Control exacto en porcentaje para que no se desfase en ningún teléfono
   const canastaX = canastaAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["3%", "85%"], 
+    outputRange: ["3%", "85%"],
   });
 
   const iniciarJuego = () => {
@@ -81,7 +81,7 @@ export default function ModuloCoordinacion() {
 
   return (
     <View style={styles.page}>
-      
+
       {/* --- CAPA DE FONDO: LLUVIA DE FRUTAS --- */}
       <View style={styles.capaAnimacionGlobal} pointerEvents="none">
         {frutasAnims.map((animValue, index) => (
@@ -120,15 +120,15 @@ export default function ModuloCoordinacion() {
 
       {/* --- TARJETA BLANCA (40% DEL ALTO TOTAL) --- */}
       <View style={styles.contenedor}>
-        
+
         {/* Fila Objetivo */}
         <View style={styles.headerRow}>
           <View style={styles.objetivoContenedor}>
             <Text style={styles.objetivoTitulo}>Objetivo</Text>
           </View>
-          <Ionicons name="eye" size={30} color="#e93232" />
+          <MaterialCommunityIcons name="hand-pointing-up" size={30} color="#2ecc71" />
         </View>
-        
+
         <View style={styles.objectContenedor}>
           <Text style={styles.objetivoDescripcion}>
             Fortalecer retención visual
@@ -141,7 +141,7 @@ export default function ModuloCoordinacion() {
             <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
           </View>
         </View>
-        
+
         <View style={styles.indicaciones}>
           <Text style={styles.indicacion}>🧺 Toca Iniciar para empezar a jugar.</Text>
           <Text style={styles.indicacion}>👆 Toca las frutas para atraparlas.</Text>
@@ -150,11 +150,11 @@ export default function ModuloCoordinacion() {
 
         {/* --- FILA DE BOTONES (TUTORIAL + INICIAR) --- */}
         <View style={styles.filaBotones}>
-          
+
           {/* Botón Tutorial (Rojo) */}
           <View style={styles.botonBaseTutorial}>
-            <Pressable 
-              style={styles.botonTutorial} 
+            <Pressable
+              style={styles.botonTutorial}
               onPress={() => router.push("../modulo/coordinacion/tutorial")}
             >
               <Text style={styles.textoBoton}>Tutorial</Text>
@@ -163,8 +163,8 @@ export default function ModuloCoordinacion() {
 
           {/* Botón Iniciar (Naranja) */}
           <View style={styles.botonBaseIniciar}>
-            <Pressable 
-              style={styles.botonIniciar} 
+            <Pressable
+              style={styles.botonIniciar}
               onPress={() => router.push("../modulo/coordinacion/juego")}
             >
               <Text style={styles.textoBoton}>Iniciar</Text>

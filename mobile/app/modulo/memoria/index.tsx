@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -81,7 +82,7 @@ function CartaMini({
   emoji: string; revealed: boolean; delay: number;
   onPress?: () => void; encontrada?: boolean; error?: boolean;
 }) {
-  const flip  = useRef(new Animated.Value(revealed ? 1 : 0)).current;
+  const flip = useRef(new Animated.Value(revealed ? 1 : 0)).current;
   const scale = useRef(new Animated.Value(0)).current;
   const shake = useRef(new Animated.Value(0)).current;
   const prevRevealed = useRef(revealed);
@@ -103,7 +104,7 @@ function CartaMini({
     if (encontrada) {
       Animated.sequence([
         Animated.spring(scale, { toValue: 1.3, friction: 3, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1,   friction: 4, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }),
       ]).start();
     }
   }, [encontrada]);
@@ -111,22 +112,22 @@ function CartaMini({
   useEffect(() => {
     if (error) {
       Animated.sequence([
-        Animated.timing(shake, { toValue:  8, duration: 55, useNativeDriver: true }),
+        Animated.timing(shake, { toValue: 8, duration: 55, useNativeDriver: true }),
         Animated.timing(shake, { toValue: -8, duration: 55, useNativeDriver: true }),
-        Animated.timing(shake, { toValue:  8, duration: 55, useNativeDriver: true }),
+        Animated.timing(shake, { toValue: 8, duration: 55, useNativeDriver: true }),
         Animated.timing(shake, { toValue: -8, duration: 55, useNativeDriver: true }),
-        Animated.timing(shake, { toValue:  0, duration: 55, useNativeDriver: true }),
+        Animated.timing(shake, { toValue: 0, duration: 55, useNativeDriver: true }),
       ]).start();
     }
   }, [error]);
 
-  const frontRot = flip.interpolate({ inputRange: [0, 1], outputRange: ["0deg",   "180deg"] });
-  const backRot  = flip.interpolate({ inputRange: [0, 1], outputRange: ["180deg", "360deg"] });
+  const frontRot = flip.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] });
+  const backRot = flip.interpolate({ inputRange: [0, 1], outputRange: ["180deg", "360deg"] });
 
   return (
     <Pressable onPress={onPress} style={Sc.cartaWrapper}>
       <Animated.View style={{ transform: [{ scale }, { translateX: shake }] }}>
-        <Animated.View style={[Sc.cartaFace, Sc.cartaBack,  { transform: [{ rotateY: frontRot }] }]}>
+        <Animated.View style={[Sc.cartaFace, Sc.cartaBack, { transform: [{ rotateY: frontRot }] }]}>
           <Text style={Sc.cartaQ}>?</Text>
         </Animated.View>
         <Animated.View style={[Sc.cartaFace, Sc.cartaFront, encontrada && Sc.cartaEncontrada, { transform: [{ rotateY: backRot }] }]}>
@@ -138,7 +139,7 @@ function CartaMini({
 }
 
 // ─── PASO 1: Demo de memorización ────────────────────────────────────────────
-const FRUTAS_GRID = ["🍎","🍌","🍇","🍊","🍓","🍍","🍎","🍌","🍇","🍊","🍓","🍍"];
+const FRUTAS_GRID = ["🍎", "🍌", "🍇", "🍊", "🍓", "🍍", "🍎", "🍌", "🍇", "🍊", "🍓", "🍍"];
 
 function Paso1Demo() {
   const [revealed, setRevealed] = useState(true);
@@ -156,7 +157,7 @@ function Paso1Demo() {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulso, { toValue: 1.08, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulso, { toValue: 1,    duration: 700, useNativeDriver: true }),
+        Animated.timing(pulso, { toValue: 1, duration: 700, useNativeDriver: true }),
       ])
     ).start();
   }, []);
@@ -165,7 +166,7 @@ function Paso1Demo() {
     <View style={Sc.demoWrap}>
       <Animated.View style={[Sc.labelBadge, { transform: [{ scale: pulso }] }]}>
         <Text style={Sc.labelBadgeText}>
-          {revealed ? "👁 Memoriza las posiciones..." : "🫣 ¿Las recuerdas?"}
+          {revealed ? " Memoriza las posiciones..." : "¿Las recuerdas?"}
         </Text>
       </Animated.View>
       <View style={Sc.gridDemo}>
@@ -178,17 +179,17 @@ function Paso1Demo() {
 }
 
 // ─── PASO 2: Demo interactiva – toca pares ───────────────────────────────────
-const CARTAS_PASO2 = ["🍎","🍇","🍎","🍌","🍇","🍌"];
+const CARTAS_PASO2 = ["🍎", "🍇", "🍎", "🍌", "🍇", "🍌"];
 
 function Paso2Demo({ onParEncontrado }: { onParEncontrado: () => void }) {
   const [tablero, setTablero] = useState(
     CARTAS_PASO2.map((c, i) => ({ id: i, emoji: c, volteada: false, encontrada: false }))
   );
   const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
-  const [errores, setErrores]             = useState<number[]>([]);
-  const paresTotales     = CARTAS_PASO2.length / 2;
-  const parNotifY        = useRef(new Animated.Value(0)).current;
-  const parNotifO        = useRef(new Animated.Value(0)).current;
+  const [errores, setErrores] = useState<number[]>([]);
+  const paresTotales = CARTAS_PASO2.length / 2;
+  const parNotifY = useRef(new Animated.Value(0)).current;
+  const parNotifO = useRef(new Animated.Value(0)).current;
   const [notifVisible, setNotifVisible] = useState(false);
   const yaGano = useRef(false);
 
@@ -198,7 +199,7 @@ function Paso2Demo({ onParEncontrado }: { onParEncontrado: () => void }) {
     parNotifY.setValue(0);
     Animated.sequence([
       Animated.timing(parNotifY, { toValue: -20, duration: 500, useNativeDriver: true }),
-      Animated.timing(parNotifO, { toValue: 0,   duration: 400, useNativeDriver: true }),
+      Animated.timing(parNotifO, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start(() => setNotifVisible(false));
   };
 
@@ -276,8 +277,8 @@ function Paso2Demo({ onParEncontrado }: { onParEncontrado: () => void }) {
 // ─── PASO 3: Resumen de niveles ───────────────────────────────────────────────
 function Paso3Demo() {
   const niveles = [
-    { label: "Nivel 1", cartas: 6,  color: "#4ade80" },
-    { label: "Nivel 2", cartas: 8,  color: "#60a5fa" },
+    { label: "Nivel 1", cartas: 6, color: "#4ade80" },
+    { label: "Nivel 2", cartas: 8, color: "#60a5fa" },
     { label: "Nivel 3", cartas: 10, color: "#a78bfa" },
     { label: "Nivel 4", cartas: 12, color: "#f472b6" },
     { label: "Nivel 5", cartas: 16, color: "#fb923c" },
@@ -312,7 +313,7 @@ function Paso3Demo() {
 // ─── Pantalla del tutorial interactivo (3 pasos) ──────────────────────────────
 function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
   const router = useRouter();
-  const [paso, setPaso]                   = useState(1);
+  const [paso, setPaso] = useState(1);
   const [paso2Completo, setPaso2Completo] = useState(false);
 
   const INFO = {
@@ -342,7 +343,7 @@ function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
     },
   } as const;
 
-  const info     = INFO[paso as 1 | 2 | 3];
+  const info = INFO[paso as 1 | 2 | 3];
   const disabled = paso === 2 ? !paso2Completo : false;
 
   const avanzar = () => {
@@ -376,7 +377,7 @@ function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
           <View style={S.pasoBadge}>
             <Text style={S.pasoBadgeTexto}>Paso {paso} de 3</Text>
           </View>
-          <Text style={S.ojoIcono}>👁️</Text>
+          <MaterialCommunityIcons name="hand-pointing-up" size={30} color="#2ecc71" />
         </View>
 
         <View style={S.descripcionBox}>
@@ -412,7 +413,7 @@ function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
 
 // ─── Pantalla de inicio del módulo ───────────────────────────────────────────
 export default function TutorialMemoria() {
-  const router    = useRouter();
+  const router = useRouter();
   const [verTutorial, setVerTutorial] = useState(false);
 
   if (verTutorial) {
@@ -443,7 +444,7 @@ export default function TutorialMemoria() {
           <View style={S.pasoBadge}>
             <Text style={S.pasoBadgeTexto}>Objetivo</Text>
           </View>
-          <Text style={S.ojoIcono}>👁️</Text>
+          <MaterialCommunityIcons name="brain" size={30} color="#3ba0dc" />
         </View>
 
         <View style={S.descripcionBox}>
@@ -635,7 +636,7 @@ const Sc = StyleSheet.create({
     borderColor: "#4ade80",
     backgroundColor: "#f0fdf4",
   },
-  cartaQ:     { fontSize: 22, color: "#fff", fontWeight: "900" },
+  cartaQ: { fontSize: 22, color: "#fff", fontWeight: "900" },
   cartaEmoji: { fontSize: 26 },
   demoWrap: {
     flex: 1,
@@ -682,8 +683,8 @@ const Sc = StyleSheet.create({
     gap: 8,
     width: Math.min(SCREEN_WIDTH - 48, 320),
   },
-  nivelDot:    { width: 10, height: 10, borderRadius: 5 },
-  nivelLabel:  { fontSize: 12, fontWeight: "700", color: "#444", width: 52 },
+  nivelDot: { width: 10, height: 10, borderRadius: 5 },
+  nivelLabel: { fontSize: 12, fontWeight: "700", color: "#444", width: 52 },
   nivelBarWrap: {
     flex: 1,
     height: 10,
@@ -691,6 +692,6 @@ const Sc = StyleSheet.create({
     borderRadius: 5,
     overflow: "hidden",
   },
-  nivelBar:    { height: 10, borderRadius: 5 },
+  nivelBar: { height: 10, borderRadius: 5 },
   nivelCartas: { fontSize: 12, color: "#777", width: 44, textAlign: "right" },
 });

@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -383,7 +384,6 @@ function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
           <View style={S.pasoBadge}>
             <Text style={S.pasoBadgeTexto}>Paso {paso} de 3</Text>
           </View>
-          <Text style={S.ojoIcono}>🧮</Text>
         </View>
 
         <View style={S.descripcionBox}>
@@ -450,7 +450,7 @@ export default function TutorialSuma() {
           <View style={S.pasoBadge}>
             <Text style={S.pasoBadgeTexto}>Objetivo</Text>
           </View>
-          <Text style={S.ojoIcono}>🧮</Text>
+          <MaterialCommunityIcons name="puzzle" size={30} color="#f1c40f" />
         </View>
 
         <View style={S.descripcionBox}>
