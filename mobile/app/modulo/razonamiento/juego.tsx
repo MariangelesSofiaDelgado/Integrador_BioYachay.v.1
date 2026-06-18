@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Pressable, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
 import styles from "./styles/stylesjuego";
 
 const CANTIDAD_NUMEROS = 6;
@@ -29,43 +28,34 @@ export default function JuegoSuma() {
   const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
   const [juegoTerminado, setJuegoTerminado] = useState(false);
 
-  // Valores de Animación
-  const scaleTarget = useSharedValue(1);
-  const shakeX = useSharedValue(0);
-
-  const animTargetStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(scaleTarget.value) }],
-  }));
-
-  const animContainerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shakeX.value }],
-  }));
+  // Valores de Animación (Animated nativo en lugar de reanimated)
+  const scaleTarget = useRef(new Animated.Value(1)).current;
+  const shakeX = useRef(new Animated.Value(0)).current;
 
   const generarNuevaRonda = () => {
-  // 1. genera y ordenamos los números
-  const nuevosNumeros = generarNumeros().sort((a, b) => a - b);
-  
-  // 2. Elige 2 o 3 números ALEATORIOS de esa lista para crear el objetivo
+    // 1. genera y ordenamos los números
+    const nuevosNumeros = generarNumeros().sort((a, b) => a - b);
 
-  const indice1 = Math.floor(Math.random() * nuevosNumeros.length);
-  let indice2 = Math.floor(Math.random() * nuevosNumeros.length);
-  while (indice2 === indice1) indice2 = Math.floor(Math.random() * nuevosNumeros.length);
-  
-  let sumaSegura = nuevosNumeros[indice1] + nuevosNumeros[indice2];
-  
- 
-  if (Math.random() > 0.5) {
-    let indice3 = Math.floor(Math.random() * nuevosNumeros.length);
-    if (indice3 !== indice1 && indice3 !== indice2) {
-      sumaSegura += nuevosNumeros[indice3];
+    // 2. Elige 2 o 3 números ALEATORIOS de esa lista para crear el objetivo
+    const indice1 = Math.floor(Math.random() * nuevosNumeros.length);
+    let indice2 = Math.floor(Math.random() * nuevosNumeros.length);
+    while (indice2 === indice1) indice2 = Math.floor(Math.random() * nuevosNumeros.length);
+
+    let sumaSegura = nuevosNumeros[indice1] + nuevosNumeros[indice2];
+
+    if (Math.random() > 0.5) {
+      let indice3 = Math.floor(Math.random() * nuevosNumeros.length);
+      if (indice3 !== indice1 && indice3 !== indice2) {
+        sumaSegura += nuevosNumeros[indice3];
+      }
     }
-  }
 
-  setNumbers(nuevosNumeros);
-  setTarget(sumaSegura); 
-  setSelectedIndices([]);
-  setCurrentSum(0);
-};
+    setNumbers(nuevosNumeros);
+    setTarget(sumaSegura);
+    setSelectedIndices([]);
+    setCurrentSum(0);
+  };
+
   useEffect(() => { generarNuevaRonda(); }, []);
 
   useEffect(() => {
@@ -82,6 +72,21 @@ export default function JuegoSuma() {
     }, 1000);
     return () => clearInterval(timer);
   }, [juegoTerminado]);
+
+  const dispararShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const dispararPulso = () => {
+    Animated.spring(scaleTarget, { toValue: 1.15, useNativeDriver: true }).start(() => {
+      Animated.spring(scaleTarget, { toValue: 1, useNativeDriver: true }).start();
+    });
+  };
 
   const handlePress = (index: number) => {
     if (juegoTerminado) return;
@@ -100,19 +105,13 @@ export default function JuegoSuma() {
 
     if (newSum === target) {
       setAciertos((prev) => prev + 1);
-      setTimeout(generarNuevaRonda, 300); 
+      dispararPulso();
+      setTimeout(generarNuevaRonda, 300);
       return;
     }
 
     if (newSum > target) {
-    
-      shakeX.value = withSequence(
-        withTiming(-10, { duration: 50 }),
-        withTiming(10, { duration: 50 }),
-        withTiming(-10, { duration: 50 }),
-        withTiming(0, { duration: 50 })
-      );
-      
+      dispararShake();
       setErrores((prev) => prev + 1);
       setSelectedIndices([]);
       setCurrentSum(0);
@@ -120,34 +119,33 @@ export default function JuegoSuma() {
     }
   };
 
-  
   if (juegoTerminado) {
     return (
       <View style={styles.contenedor}>
-         <Text style={[styles.titulo, { color: "#2f5279" }]}>JUEGO TERMINADO</Text>
-         {/* ... Resto de tu vista de resultados ... */}
-         <Pressable style={styles.botonVolver} onPress={() => router.replace("/modulo/razonamiento") }>
-           <Text style={styles.textoBoton}>Volver</Text>
-         </Pressable>
+        <Text style={[styles.titulo, { color: "#2f5279" }]}>JUEGO TERMINADO</Text>
+        {/* ... Resto de tu vista de resultados ... */}
+        <Pressable style={styles.botonVolver} onPress={() => router.replace("/modulo/razonamiento")}>
+          <Text style={styles.textoBoton}>Volver</Text>
+        </Pressable>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Animated.View style={[styles.container, animContainerStyle]}>
+      <Animated.View style={[styles.container, { transform: [{ translateX: shakeX }] }]}>
         <View style={styles.header}>
           <Text style={styles.headerText}>Suma Números</Text>
         </View>
 
         <View style={styles.targetContainer}>
-          <Animated.View style={[styles.outerCircle, animTargetStyle]}>
+          <Animated.View style={[styles.outerCircle, { transform: [{ scale: scaleTarget }] }]}>
             <View style={styles.innerCircle}>
               <Text style={styles.targetText}>{target}</Text>
             </View>
           </Animated.View>
-          
-          <Text style={{fontSize: 20, color: '#3D7EB7', marginTop: 10, fontWeight: 'bold'}}>
+
+          <Text style={{ fontSize: 20, color: '#3D7EB7', marginTop: 10, fontWeight: 'bold' }}>
             Suma actual: {currentSum}
           </Text>
         </View>
@@ -160,11 +158,11 @@ export default function JuegoSuma() {
           {numbers.map((num, index) => {
             const seleccionado = selectedIndices.includes(index);
             return (
-              <FichaAnimada 
-                key={index} 
-                num={num} 
-                seleccionado={seleccionado} 
-                onPress={() => handlePress(index)} 
+              <FichaAnimada
+                key={index}
+                num={num}
+                seleccionado={seleccionado}
+                onPress={() => handlePress(index)}
               />
             );
           })}
@@ -178,27 +176,31 @@ export default function JuegoSuma() {
   );
 }
 
-
 function FichaAnimada({ num, seleccionado, onPress }: any) {
-  const scale = useSharedValue(1);
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    scale.value = seleccionado ? withSpring(0.9) : withSpring(1);
-  }, [seleccionado]);
+    Animated.spring(scale, {
+      toValue: seleccionado ? 0.9 : 1,
+      useNativeDriver: true,
+    }).start();
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: withTiming(seleccionado ? 0.7 : 1),
-  }));
+    Animated.timing(opacity, {
+      toValue: seleccionado ? 0.7 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [seleccionado]);
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={1}>
       <Animated.View style={[
-        styles.carta, 
+        styles.carta,
         seleccionado && styles.selectedBox,
-        animatedStyle
+        { transform: [{ scale }], opacity },
       ]}>
-        <Text style={[styles.simbolo, seleccionado && {color: 'white'}]}>{num}</Text>
+        <Text style={[styles.simbolo, seleccionado && { color: 'white' }]}>{num}</Text>
       </Animated.View>
     </TouchableOpacity>
   );

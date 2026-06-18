@@ -1,198 +1,151 @@
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { Animated, Pressable, ScrollView, Text, View } from "react-native";
-import styles from "../visoespacial/styles/stylesindex";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import { crearEstilosModulo } from "../styleModuloBase";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-export default function MenuVisoespacial() {
-  const router = useRouter();
+const COLOR = "#9b59b6";
+const COLOR_DARK = "#6c3483";
 
-  // --- ANIMACIÓN DEL TRIÁNGULO ---
-  const animacionTrianguloY = useRef(new Animated.Value(0)).current;
-  const opacidadTriangulo = useRef(new Animated.Value(1)).current;
+const S = crearEstilosModulo(COLOR, COLOR_DARK);
 
-  // --- ANIMACIÓN DEL CÍRCULO ---
-  const animacionCirculoY = useRef(new Animated.Value(0)).current;
-  const opacidadCirculo = useRef(new Animated.Value(1)).current;
-
- useEffect(() => {
-    const bucleTutorial = Animated.loop(
-      Animated.parallel([
-        
-        // --- SECUENCIA DEL TRIÁNGULO ---
-        Animated.sequence([
-          Animated.delay(200),
-          Animated.timing(animacionTrianguloY, {
-            toValue: 58, // 👈 Ajustado de 65 a 53 para que frene exacto en el centro
-            duration: 1800,
-            useNativeDriver: true,
-          }),
-          Animated.delay(600),
-          Animated.timing(opacidadTriangulo, {
-            toValue: 0,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animacionTrianguloY, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacidadTriangulo, {
-            toValue: 1,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-        ]),
-
-        // --- SECUENCIA DEL CÍRCULO ---
-        Animated.sequence([
-          Animated.delay(1100),
-          Animated.timing(animacionCirculoY, {
-            toValue: 58, // 👈 Ajustado de 65 a 53 también
-            duration: 1800,
-            useNativeDriver: true,
-          }),
-          Animated.delay(600),
-          Animated.timing(opacidadCirculo, {
-            toValue: 0,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animacionCirculoY, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacidadCirculo, {
-            toValue: 1,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-        ])
-
-      ])
-    );
-
-    bucleTutorial.start();
-    return () => bucleTutorial.stop();
-  }, [animacionTrianguloY, opacidadTriangulo, animacionCirculoY, opacidadCirculo]);
-
+// ─── Figura: triángulo CSS-style con borders ──────────────────────────────────
+function Triangulo({ size, color }: { size: number; color: string }) {
   return (
-    <View style={styles.page}>
-      <Stack.Screen options={{}} />
+    <View style={{
+      width: 0, height: 0,
+      borderLeftWidth: size / 2,
+      borderRightWidth: size / 2,
+      borderBottomWidth: size,
+      borderLeftColor: "transparent",
+      borderRightColor: "transparent",
+      borderBottomColor: color,
+    }} />
+  );
+}
 
-      {/* --- INTERFAZ SUPERIOR (ZONA GRIS) --- */}
-      <View style={styles.zonaSuperior}>
-        <Text style={styles.titulo}>Encaja las Formas</Text>
-        <View style={styles.tituloLinea} />
+// ─── Molde punteado genérico ──────────────────────────────────────────────────
+function Molde({ size, children }: { size: number; children?: React.ReactNode }) {
+  return (
+    <View style={{
+      width: size, height: size,
+      borderWidth: 2, borderColor: "#bbb",
+      borderStyle: "dashed", borderRadius: 10,
+      alignItems: "center", justifyContent: "center",
+    }}>
+      {children}
+    </View>
+  );
+}
 
-      {/* Contenedor de la Previsualización de Guía */}
-        <View style={styles.espacioGrisLibre}>
-          <View style={{ flexDirection: "row", gap: 65, justifyContent: "center", alignItems: "center" }}>
-            
-            {/* Ejemplo 1: Triángulo */}
-            <View style={{ alignItems: "center", height: 130, justifyContent: "flex-start" }}>
-              <Animated.Text 
-                style={{ 
-                  fontSize: 40,
-                  transform: [{ translateY: animacionTrianguloY }],
-                  opacity: opacidadTriangulo,
-                  zIndex: 5,
-                  height: 45,
-                  top: -20,
-                }}
-              >
-                🔺
-              </Animated.Text>
-              
-              <View style={{ width: 52, height: 52, borderWidth: 2, borderColor: "#999", borderStyle: "dashed", borderRadius: 12, marginTop: -3, justifyContent: "center", alignItems: "center" }}>
-                <Text style={{ fontSize: 30, opacity: 0.12 }}>🔺</Text>
-              </View>
-            </View>
+// ─── Preview estático ─────────────────────────────────────────────────────────
+function PreviewVisoespacial() {
+  return (
+    <View style={S.previewContainer}>
+      <View style={S.previewCard}>
 
-            {/* Ejemplo 2: Círculo */}
-            <View style={{ alignItems: "center", height: 130, justifyContent: "flex-start" }}>
-              <Animated.Text 
-                style={{ 
-                  fontSize: 40,
-                  transform: [{ translateY: animacionCirculoY }],
-                  opacity: opacidadCirculo,
-                  zIndex: 5,
-                  height: 45,
-                  top: -20,
-                }}
-              >
-                🔵
-              </Animated.Text>
-              
-              <View style={{ width: 52, height: 52, borderWidth: 2, borderColor: "#999", borderStyle: "dashed", borderRadius: 12, marginTop: -3, justifyContent: "center", alignItems: "center" }}>
-                <Text style={{ fontSize: 30, opacity: 0.12 }}>🔵</Text>
-              </View>
-            </View>
+        {/* Etiqueta */}
+        <View style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}>
+          <Text style={{ fontSize: 11, fontWeight: "700", color: COLOR }}>
+            Encaja las figuras
+          </Text>
+        </View>
 
+        {/* Fila de pares figura + molde */}
+        <View style={{ flexDirection: "row", gap: 24, alignItems: "center", marginTop: 8 }}>
+
+          {/* Par 1: triángulo */}
+          <View style={{ alignItems: "center", gap: 8 }}>
+            <Triangulo size={34} color="#e74c3c" />
+            <Molde size={44}>
+              <Triangulo size={26} color="#ccc" />
+            </Molde>
+          </View>
+
+          {/* Par 2: círculo */}
+          <View style={{ alignItems: "center", gap: 8 }}>
+            <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "#3182ce" }} />
+            <Molde size={44}>
+              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: "#ccc", opacity: 0.5 }} />
+            </Molde>
+          </View>
+
+          {/* Par 3: rombo */}
+          <View style={{ alignItems: "center", gap: 8 }}>
+            <View style={{
+              width: 28, height: 28, backgroundColor: "#9b59b6",
+              borderRadius: 4, transform: [{ rotate: "45deg" }],
+            }} />
+            <Molde size={44}>
+              <View style={{
+                width: 22, height: 22, backgroundColor: "#ccc",
+                borderRadius: 3, opacity: 0.5, transform: [{ rotate: "45deg" }],
+              }} />
+            </Molde>
           </View>
         </View>
       </View>
+    </View>
+  );
+}
 
-      {/* --- TARJETA BLANCA RESPONSIVA --- */}
-      <View style={styles.contenedor}>
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          {/* Fila Objetivo */}
-          <View style={styles.headerRow}>
-            <View style={styles.objetivoContenedor}>
-              <Text style={styles.objetivoTitulo}>Objetivo</Text>
-            </View>
-          </View>
-          
-          <View style={styles.objectContenedor}>
-            <Text style={styles.objetivoDescripcion}>
-              Fortalecer la percepción y orientación espacial
-            </Text>
-          </View>
+// ─── Pantalla principal ───────────────────────────────────────────────────────
+export default function MenuVisoespacial() {
+  const router = useRouter();
 
-          {/* Fila Instrucciones */}
-          <View style={styles.headerRow}>
-            <View style={styles.instruccionesContenedor}>
-              <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
-            </View>
-          </View>
-          
-          <View style={styles.indicaciones}>
-            <Text style={styles.indicacion}>🧩 Observa las figuras de colores en la parte superior.</Text>
-            <Text style={styles.indicacion}>👆 Arrastra cada figura libremente por la pantalla.</Text>
-            <Text style={styles.indicacion}>🎯 Suéltala sobre su silueta punteada para encajarla.</Text>
-          </View>
+  return (
+    <View style={S.page}>
+      <Stack.Screen options={{ headerShown: false }} />
 
-          {/* --- FILA DE BOTONES DE ACCIÓN --- */}
-          <View style={styles.filaBotones}>
-            
-            {/* Botón Tutorial */}
-            <View style={styles.botonBaseTutorial}>
-              <Pressable 
-                style={styles.botonTutorial}
-                onPress={() => router.push("/modulo/visoespacial/tutorial")} // 👈 Ruta absoluta corregida
-              >
-                <Text style={styles.textoBoton}>Tutorial</Text>
-              </Pressable>
-            </View>
-
-            {/* Botón Iniciar */}
-            <View style={styles.botonBaseIniciar}>
-              <Pressable 
-                style={styles.botonIniciar}
-                onPress={() => router.push("/modulo/visoespacial/juego")} // 👈 Ruta absoluta corregida
-              >
-                <Text style={styles.textoBoton}>Iniciar</Text>
-              </Pressable>
-            </View>
-
-          </View>
-        </ScrollView>
+      {/* ── Zona superior ── */}
+      <View style={S.zonaSuperior}>
+        <View style={S.tituloWrapper}>
+          <Text style={S.titulo}>Visoespacial</Text>
+          <View style={S.tituloLinea} />
+        </View>
+        <PreviewVisoespacial />
       </View>
 
+      {/* ── Tarjeta blanca ── */}
+      <View style={S.tarjeta}>
+        <View style={S.filaHeader}>
+          <View style={S.tagObjetivo}>
+            <Text style={S.tagObjetivoTexto}>Objetivo</Text>
+          </View>
+          <MaterialCommunityIcons name="map-marker-radius-outline" size={40} color={COLOR} />
+        </View>
+
+        <View style={S.descripcionBox}>
+          <Text style={S.descripcionTexto}>
+            Arrastra cada figura y colócala exactamente en su silueta punteada.
+          </Text>
+        </View>
+
+        <View style={S.instruccionesTag}>
+          <Text style={S.instruccionesTagTexto}>Instrucciones</Text>
+        </View>
+
+        <View style={S.instruccionesLista}>
+          <Text style={S.instruccionLinea}>🧩 Observa las figuras de colores en pantalla.</Text>
+          <Text style={S.instruccionLinea}>👆 Arrastra cada figura libremente.</Text>
+          <Text style={S.instruccionLinea}>🎯 Suéltala sobre su silueta punteada para encajarla.</Text>
+        </View>
+
+        <View style={S.filaBotones}>
+          <Pressable
+            style={S.botonTutorial}
+            onPress={() => router.push("/modulo/visoespacial/tutorial")}
+          >
+            <Text style={S.textoBoton}>Tutorial</Text>
+          </Pressable>
+          <Pressable
+            style={S.botonIniciar}
+            onPress={() => router.push("/modulo/visoespacial/juego")}
+          >
+            <Text style={S.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }

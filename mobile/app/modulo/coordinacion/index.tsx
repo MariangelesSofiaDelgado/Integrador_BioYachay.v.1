@@ -1,180 +1,127 @@
+
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions, Pressable, Text, View } from "react-native";
-import styles from "./styles/stylesindex";
+import { Stack, useRouter } from "expo-router";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import { crearEstilosModulo } from "../styleModuloBase";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const COLOR       = "#2ecc71";
+const COLOR_DARK  = "#1a8a4a";
 
-const FRUTAS = ["🍎", "🍌", "🍇", "🍓", "🍊", "🥝", "🍍", "🍉"];
-const CANTIDAD_FRUTAS = 5;
+const S = crearEstilosModulo(COLOR, COLOR_DARK);
 
-export default function ModuloCoordinacion() {
-  const router = useRouter();
+// ─── Preview estático del juego de coordinación ───────────────────────────────
+const FRUTAS_PREVIEW = [
+  { emoji: "🍎", left: 118,  top: 108  },
+  { emoji: "🍊", left: 72,  top: 128 },
+  { emoji: "🍇", left: 132,  top: 34 },
+  { emoji: "🍌", left: 108,  top: 55  },
+];
 
-  const canastaAnim = useRef(new Animated.Value(0)).current;
-
-  const frutasAnims = useRef(
-    Array.from({ length: CANTIDAD_FRUTAS }, (_, index) => new Animated.Value(-100 - index * 90))
-  ).current;
-
-  const frutasConfig = useRef(
-    Array.from({ length: CANTIDAD_FRUTAS }, () => ({
-      icono: FRUTAS[Math.floor(Math.random() * FRUTAS.length)],
-      left: Math.random() * 82,
-    }))
-  ).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(canastaAnim, {
-          toValue: 1,
-          duration: 2400,
-          useNativeDriver: false, // Cambiado a false para poder animar la propiedad 'left' sin problemas
-        }),
-        Animated.timing(canastaAnim, {
-          toValue: 0,
-          duration: 2400,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
-
-    const animarFrutaIndividual = (index: number, esPrimeraVez: boolean) => {
-      if (!esPrimeraVez) {
-        frutasAnims[index].setValue(-60);
-        frutasConfig[index].icono = FRUTAS[Math.floor(Math.random() * FRUTAS.length)],
-          frutasConfig[index].left = Math.random() * 82;
-      }
-
-      Animated.timing(frutasAnims[index], {
-        toValue: SCREEN_HEIGHT,
-        duration: 2400 + Math.random() * 800,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) {
-          animarFrutaIndividual(index, false);
-        }
-      });
-    };
-
-    frutasAnims.forEach((_, index) => {
-      animarFrutaIndividual(index, true);
-    });
-
-    return () => {
-      frutasAnims.forEach((anim) => anim.stopAnimation());
-      canastaAnim.stopAnimation();
-    };
-  }, []);
-
-  // Control exacto en porcentaje para que no se desfase en ningún teléfono
-  const canastaX = canastaAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["3%", "85%"],
-  });
-
-  const iniciarJuego = () => {
-    router.push("../modulo/coordinacion/juego");
-  };
-
+function PreviewCoordinacion() {
   return (
-    <View style={styles.page}>
+    <View style={S.previewContainer}>
+      <View style={[S.previewCard, { overflow: "visible" }]}>
 
-      {/* --- CAPA DE FONDO: LLUVIA DE FRUTAS --- */}
-      <View style={styles.capaAnimacionGlobal} pointerEvents="none">
-        {frutasAnims.map((animValue, index) => (
-          <Animated.Text
-            key={index}
-            style={[
-              styles.frutaAnimada,
-              {
-                transform: [{ translateY: animValue }],
-                left: `${frutasConfig[index].left}%`,
-              },
-            ]}
-          >
-            {frutasConfig[index].icono}
-          </Animated.Text>
-        ))}
-      </View>
-
-      {/* --- INTERFAZ SUPERIOR (ZONA GRIS) --- */}
-      <View style={styles.zonaSuperior}>
-        <Text style={styles.titulo}>Atrapa las frutas</Text>
-        <View style={styles.tituloLinea} />
-
-        {/* Pista de la Canasta */}
-        <View style={styles.espacioGrisLibre}>
-          <Animated.Text
-            style={[
-              styles.canastaAnimada,
-              { left: canastaX },
-            ]}
-          >
-            🧺
-          </Animated.Text>
-        </View>
-      </View>
-
-      {/* --- TARJETA BLANCA (40% DEL ALTO TOTAL) --- */}
-      <View style={styles.contenedor}>
-
-        {/* Fila Objetivo */}
-        <View style={styles.headerRow}>
-          <View style={styles.objetivoContenedor}>
-            <Text style={styles.objetivoTitulo}>Objetivo</Text>
-          </View>
-          <MaterialCommunityIcons name="hand-pointing-up" size={30} color="#2ecc71" />
-        </View>
-
-        <View style={styles.objectContenedor}>
-          <Text style={styles.objetivoDescripcion}>
-            Fortalecer retención visual
+        {/* Etiqueta */}
+        <View style={{ position: "absolute", top: 10, alignItems: "center" }}>
+          <Text style={{ fontSize: 11, fontWeight: "700", color: COLOR }}>
+            Atrapa las frutas
           </Text>
         </View>
 
-        {/* Fila Instrucciones */}
-        <View style={styles.headerRow}>
-          <View style={styles.instruccionesContenedor}>
-            <Text style={styles.instruccionesTitulo}>Instrucciones</Text>
-          </View>
+        {/* Frutas estáticas en distintas posiciones */}
+        <View style={{
+          width: "100%", height: "100%",
+          position: "absolute", top: 0, left: 0,
+        }}>
+          {FRUTAS_PREVIEW.map((f, i) => (
+            <Text key={i} style={{
+              position: "absolute",
+              left: f.left, top: f.top,
+              fontSize: 28,
+            }}>{f.emoji}</Text>
+          ))}
         </View>
 
-        <View style={styles.indicaciones}>
-          <Text style={styles.indicacion}>🧺 Toca Iniciar para empezar a jugar.</Text>
-          <Text style={styles.indicacion}>👆 Toca las frutas para atraparlas.</Text>
-          <Text style={styles.indicacion}>⏱️ ¡Atrapa la mayor cantidad posible!</Text>
+        {/* Línea guía */}
+        <View style={{
+          position: "absolute", bottom: 52,
+          left: 12, right: 12, height: 1,
+          borderStyle: "dashed", borderWidth: 1,
+          borderColor: COLOR + "55",
+        }} />
+
+        {/* Canasta */}
+        <Text style={{
+          position: "absolute", bottom: 10,
+          left: "36%", fontSize: 40,
+        }}>🧺</Text>
+      </View>
+    </View>
+  );
+}
+
+// ─── Pantalla principal ───────────────────────────────────────────────────────
+export default function MenuCoordinacion() {
+  const router = useRouter();
+
+  return (
+    <View style={S.page}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* ── Zona superior ── */}
+      <View style={S.zonaSuperior}>
+        <View style={S.tituloWrapper}>
+          <Text style={S.titulo}>Coordinación</Text>
+          <View style={S.tituloLinea} />
         </View>
-
-        {/* --- FILA DE BOTONES (TUTORIAL + INICIAR) --- */}
-        <View style={styles.filaBotones}>
-
-          {/* Botón Tutorial (Rojo) */}
-          <View style={styles.botonBaseTutorial}>
-            <Pressable
-              style={styles.botonTutorial}
-              onPress={() => router.push("../modulo/coordinacion/tutorial")}
-            >
-              <Text style={styles.textoBoton}>Tutorial</Text>
-            </Pressable>
-          </View>
-
-          {/* Botón Iniciar (Naranja) */}
-          <View style={styles.botonBaseIniciar}>
-            <Pressable
-              style={styles.botonIniciar}
-              onPress={() => router.push("../modulo/coordinacion/juego")}
-            >
-              <Text style={styles.textoBoton}>Iniciar</Text>
-            </Pressable>
-          </View>
-
-        </View>
-
+        <PreviewCoordinacion />
       </View>
 
+      {/* ── Tarjeta blanca ── */}
+      <View style={S.tarjeta}>
+        {/* Objetivo */}
+        <View style={S.filaHeader}>
+          <View style={S.tagObjetivo}>
+            <Text style={S.tagObjetivoTexto}>Objetivo</Text>
+          </View>
+          <MaterialCommunityIcons name="hand-pointing-up" size={40} color={COLOR} />
+        </View>
+
+        <View style={S.descripcionBox}>
+          <Text style={S.descripcionTexto}>
+            Mueve la canasta y atrapa la mayor cantidad de frutas posible.
+          </Text>
+        </View>
+
+        {/* Instrucciones */}
+        <View style={S.instruccionesTag}>
+          <Text style={S.instruccionesTagTexto}>Instrucciones</Text>
+        </View>
+
+        <View style={S.instruccionesLista}>
+          <Text style={S.instruccionLinea}>🧺 Arrastra la canasta con tu dedo.</Text>
+          <Text style={S.instruccionLinea}>👆 Intercepta las frutas antes de que caigan.</Text>
+          <Text style={S.instruccionLinea}>⏱️ ¡Atrapa la mayor cantidad posible!</Text>
+        </View>
+
+        {/* Botones */}
+        <View style={S.filaBotones}>
+          <Pressable
+            style={S.botonTutorial}
+            onPress={() => router.push("/modulo/coordinacion/tutorial")}
+          >
+            <Text style={S.textoBoton}>Tutorial</Text>
+          </Pressable>
+          <Pressable
+            style={S.botonIniciar}
+            onPress={() => router.push("/modulo/coordinacion/juego")}
+          >
+            <Text style={S.textoBoton}>Iniciar</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }

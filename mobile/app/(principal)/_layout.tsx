@@ -1,7 +1,3 @@
-// app/(principal)/_layout.tsx
-// IMPORTANTE: Este archivo debe llamarse _layout.tsx (con guion bajo)
-// Si tu archivo actual se llama layout.tsx, renómbralo a _layout.tsx
-
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
