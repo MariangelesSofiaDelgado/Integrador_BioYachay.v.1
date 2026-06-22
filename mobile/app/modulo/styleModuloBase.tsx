@@ -130,7 +130,7 @@ export function crearEstilosModulo(color: string, colorOscuro: string) {
     // ─ Instrucciones ──────────────────────────────────────────────────────────
     instruccionesTag: {
       alignSelf: "flex-start",
-      backgroundColor: "#337ab7",
+      backgroundColor: "#948efd",
       paddingVertical: 4,
       paddingHorizontal: 14,
       borderRadius: 999,
@@ -153,16 +153,8 @@ export function crearEstilosModulo(color: string, colorOscuro: string) {
     // ─ Fila de botones ────────────────────────────────────────────────────────
     filaBotones: {
       flexDirection: "row",
-      gap: 12,
       marginTop: 6,
-    },
-    botonTutorial: {
-      flex: 1,
-      backgroundColor: colorOscuro,
-      borderRadius: 999,
-      paddingVertical: 13,
-      alignItems: "center",
-      justifyContent: "center",
+      marginBottom: 20,
     },
     botonIniciar: {
       flex: 1,

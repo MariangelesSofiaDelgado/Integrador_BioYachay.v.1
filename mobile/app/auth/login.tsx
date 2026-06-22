@@ -2,11 +2,12 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, } from "react-native";
 import { login } from "../../services/authService";
-import { guardarSesion } from "../../services/sessionStorage";
+import { useAuth } from "../../contexts/AuthContext";
 import styles from "../../services/stylesauth";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const {iniciarSesion} = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +29,7 @@ export default function LoginScreen() {
     setCargando(true);
     try {
       const usuario = await login({ email: email.trim().toLowerCase(), password });
-      await guardarSesion(usuario);
+      await iniciarSesion(usuario);
       router.replace("/(principal)");
     } catch (e: any) {
       setError(e.message || "Error al iniciar sesión");

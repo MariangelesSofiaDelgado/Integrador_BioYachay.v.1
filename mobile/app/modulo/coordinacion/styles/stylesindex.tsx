@@ -24,23 +24,7 @@ export default StyleSheet.create({
     justifyContent: "flex-start",
     zIndex: 2,
   },
-  titulo: {
-    fontSize: 38,
-    fontWeight: "700",
-    color: "#e93232",
-    textAlign: "center",
-    marginTop: 35,
-    marginBottom: 4,
-  },
-  tituloLinea: {
-    width: 230,
-    height: 3,
-    backgroundColor: "#e93232",
-    alignSelf: "center",
-    borderRadius: 999,
-    marginTop: 3,
-    marginBottom: 5,
-  },
+  
   espacioGrisLibre: {
     flex: 1,
     width: "100%",
@@ -107,15 +91,7 @@ export default StyleSheet.create({
     fontSize: 18, // Ajustado a 18
     color: "#333",
   },
-  instruccionesContenedor: {
-    alignSelf: "flex-start",
-    paddingVertical: 5,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: "#549be5",
-    elevation: 1,
-    marginTop: -5,
-  },
+
   instruccionesTitulo: {
     fontSize: 18, // Ajustado a 18
     fontWeight: "600",
@@ -142,41 +118,6 @@ export default StyleSheet.create({
     marginBottom: 5,
   },
 
-  /* --- ESTILOS BOTÓN TUTORIAL (ROJO) --- */
-  botonBaseTutorial: {
-    flex: 1,
-    backgroundColor: "#b31d1d", // Sombra roja oscura
-    borderRadius: 20,
-    paddingVertical: 2,
-    marginRight: 10, // Separación con el botón de Iniciar
-  },
-  botonTutorial: {
-    alignItems: "center",
-    backgroundColor: "#e93232", // Rojo vibrante del tema
-    paddingVertical: 10,
-    borderRadius: 20,
-    position: "relative",
-    top: -5,
-    elevation: 3,
-  },
-
-  /* --- ESTILOS BOTÓN INICIAR (NARANJA) --- */
-  botonBaseIniciar: {
-    flex: 1,
-    backgroundColor: "#ce540e", // Sombra naranja oscura
-    borderRadius: 20,
-    paddingVertical: 2,
-    marginLeft: 10, // Separación con el botón de Tutorial
-  },
-  botonIniciar: {
-    alignItems: "center",
-    backgroundColor: "#faa638", // Naranja brillante
-    paddingVertical: 10,
-    borderRadius: 20,
-    position: "relative",
-    top: -5,
-    elevation: 3,
-  },
 
   /* --- TEXTO DE AMBOS BOTONES --- */
   textoBoton: {

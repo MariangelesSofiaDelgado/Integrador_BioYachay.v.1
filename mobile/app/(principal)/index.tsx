@@ -64,13 +64,13 @@ const styles = StyleSheet.create({
     titulo: {
         textAlign: "center",
         fontSize: 30,
-        color: "#0a5f64",
+        color: "#35317d",
         fontWeight: "700",
         marginBottom: 10,
     },
     subtitulo: {
         textAlign: "center",
-        fontSize: 16,
+        fontSize: 22,
         color: "#666666",
     },
     grid: {

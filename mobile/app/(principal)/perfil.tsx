@@ -223,25 +223,25 @@ function PantallaAuth({ onLogin }: { onLogin: (u: AuthUser) => void }) {
 // ─── Pantalla cuando SÍ hay sesión ───────────────────────────────────────────
 function PantallaPerfil({ usuario, onLogout }: { usuario: AuthUser; onLogout: () => void }) {
   const handleLogout = () => {
-  if (Platform.OS === "web") {
-    const confirmar = window.confirm("¿Deseas cerrar sesión?");
-    if (confirmar) {
-      cerrarSesion().then(() => onLogout());
-    }
-  } else {
-    Alert.alert("Cerrar sesión", "¿Deseas salir de tu cuenta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Salir",
-        style: "destructive",
-        onPress: async () => {
-          await cerrarSesion();
-          onLogout();
+    if (Platform.OS === "web") {
+      const confirmar = window.confirm("¿Deseas cerrar sesión?");
+      if (confirmar) {
+        cerrarSesion().then(() => onLogout());
+      }
+    } else {
+      Alert.alert("Cerrar sesión", "¿Deseas salir de tu cuenta?", [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Salir",
+          style: "destructive",
+          onPress: async () => {
+            await cerrarSesion();
+            onLogout();
+          },
         },
-      },
-    ]);
-  }
-};
+      ]);
+    }
+  };
 
   const modulos = [
     { nombre: "Memoria", color: "#3ba0dc", icono: "brain" as const },

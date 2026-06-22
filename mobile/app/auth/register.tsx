@@ -12,11 +12,12 @@ import {
   View,
 } from "react-native";
 import { registrar } from "../../services/authService";
-import { guardarSesion } from "../../services/sessionStorage";
+import { useAuth } from "../../contexts/AuthContext";
 import styles from "../../services/stylesauth";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const {iniciarSesion} = useAuth();
 
   const [nombre,   setNombre]   = useState("");
   const [email,    setEmail]    = useState("");
@@ -53,7 +54,7 @@ export default function RegisterScreen() {
         dni:    dni.trim(),
         password,
       });
-      await guardarSesion(usuario);
+      await iniciarSesion(usuario);
       router.replace("/(principal)");
     } catch (e: any) {
       setError(e.message || "Error al registrarse");

@@ -1,21 +1,22 @@
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { crearEstilosModulo } from "../styleModuloBase";
+import { yaVioTutorial } from "@/services/tutorialStorage";
+import { reiniciarTutorial } from "@/services/tutorialStorage";
 
-const COLOR       = "#2ecc71";
-const COLOR_DARK  = "#1a8a4a";
+const COLOR = "#2ecc71";
+const COLOR_DARK = "#1a8a4a";
 
 const S = crearEstilosModulo(COLOR, COLOR_DARK);
 
 // ─── Preview estático del juego de coordinación ───────────────────────────────
 const FRUTAS_PREVIEW = [
-  { emoji: "🍎", left: 118,  top: 108  },
-  { emoji: "🍊", left: 72,  top: 128 },
-  { emoji: "🍇", left: 132,  top: 34 },
-  { emoji: "🍌", left: 108,  top: 55  },
+  { emoji: "🍎", left: 118, top: 108 },
+  { emoji: "🍊", left: 72, top: 128 },
+  { emoji: "🍇", left: 132, top: 34 },
+  { emoji: "🍌", left: 108, top: 55 },
 ];
 
 function PreviewCoordinacion() {
@@ -65,7 +66,14 @@ function PreviewCoordinacion() {
 // ─── Pantalla principal ───────────────────────────────────────────────────────
 export default function MenuCoordinacion() {
   const router = useRouter();
-
+  const handleIniciar = async () => {
+    const yaVisto = await yaVioTutorial("coordinacion");
+    if (yaVisto) {
+      router.push("/modulo/coordinacion/juego");
+    } else {
+      router.push("/modulo/coordinacion/tutorial");
+    }
+  };
   return (
     <View style={S.page}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -109,16 +117,13 @@ export default function MenuCoordinacion() {
         {/* Botones */}
         <View style={S.filaBotones}>
           <Pressable
-            style={S.botonTutorial}
-            onPress={() => router.push("/modulo/coordinacion/tutorial")}
-          >
-            <Text style={S.textoBoton}>Tutorial</Text>
-          </Pressable>
-          <Pressable
             style={S.botonIniciar}
-            onPress={() => router.push("/modulo/coordinacion/juego")}
+            onPress={handleIniciar}
           >
             <Text style={S.textoBoton}>Iniciar</Text>
+          </Pressable>
+          <Pressable onPress={() => reiniciarTutorial("coordinacion")}>
+            <Text>🔄 Reiniciar tutorial</Text>
           </Pressable>
         </View>
       </View>
