@@ -1,17 +1,17 @@
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Animated,
+    Dimensions,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const BLUE = "#337ab7";
+const BLUE = "#e93232";
 const CARTA_SIZE = 54;
 
 // ─── Fondo animado con números flotando ──────────────────────────────────────
@@ -292,7 +292,7 @@ function Paso3Demo() {
     { label: "Regla 3", texto: "Si te pasas, se reinicia la selección", color: "#a78bfa" },
     { label: "Regla 4", texto: "60 segundos. ¡Haz el mayor puntaje!",  color: "#fb923c" },
   ];
-  const scales = reglas.map(() => useRef(new Animated.Value(0)).current);
+  const scales = useRef(reglas.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     reglas.forEach((_, i) => {
@@ -300,7 +300,7 @@ function Paso3Demo() {
         Animated.spring(scales[i], { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
       }, i * 150);
     });
-  }, []);
+  }, [scales]);
 
   return (
     <View style={Sc.demoWrap}>

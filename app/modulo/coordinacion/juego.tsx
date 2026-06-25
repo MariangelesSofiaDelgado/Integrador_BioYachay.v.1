@@ -1,64 +1,62 @@
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Text, View } from "react-native";
+import { Animated, Dimensions, PanResponder, Text, View } from "react-native";
 import styles from "./styles/stylesjuego";
-// Asegúrate de importar esto al principio del archivo:
-import { PanResponder } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const FRUTAS_DISPONIBLES = ["🍎", "🍐", "🍊", "🍋", "🍌", "🍓"];
+
+// Frutas variadas que caen
+const FRUTAS_DISPONIBLES = ["🍎", "🍐", "🍊", "🍋", "🍌", "🍓", "🍇", "🍉", "🍑", "🥝"];
 
 export default function Juego() {
   const router = useRouter();
   const [puntos, setPuntos] = useState(0);
   const [fallos, setFallos] = useState(0);
   const [tiempo, setTiempo] = useState(60);
-  const ultimaGeneracionRef = useRef<number>(0);
-  
-  const frutasRef = useRef<any[]>([]);
-  const [_, setTrigger] = useState(0); 
 
-  // --- REFS DE CONTROL DE LA CANASTA (Declaradas en orden correcto) ---
+  const puntosRef = useRef(0);
+  const fallosRef = useRef(0);
+
+  const frutasRef = useRef<any[]>([]);
+  const [_, setTrigger] = useState(0);
+
+  // --- CANASTA ---
   const canastaX = useRef(new Animated.Value(42));
   const canastaXValue = useRef(42);
-  const startX = useRef(42); // Guarda la posición base al tocar para evitar saltos
+  const startX = useRef(42);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastX = useRef<number>(0);
 
+  // Sync puntos/fallos refs para usarlos dentro de closures sin stale state
+  useEffect(() => { puntosRef.current = puntos; }, [puntos]);
+  useEffect(() => { fallosRef.current = fallos; }, [fallos]);
+
+  // Ancho visual de la canasta (fontSize 52) como % del ancho de pantalla
+  const MARGEN_CANASTA = (52 / SCREEN_WIDTH) * 100;
+
   const obtenerConfiguracionDificultad = () => {
-    const totalIntentos = puntos + fallos;
-    if (totalIntentos > 22) return { intervalo: 300, duracion: 1400 };
-    if (totalIntentos > 12) return { intervalo: 600, duracion: 1700 };
-    return { intervalo: 900, duracion: 2000 };
+    const totalIntentos = puntosRef.current + fallosRef.current;
+    if (totalIntentos > 22) return { intervalo: 300, duracion: 1100, margen: MARGEN_CANASTA, label: "🔥 Difícil" };
+    if (totalIntentos > 12) return { intervalo: 550, duracion: 1500, margen: MARGEN_CANASTA, label: "⚡ Medio" };
+    return { intervalo: 900, duracion: 2000, margen: MARGEN_CANASTA, label: "🌱 Fácil" };
   };
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-
       onPanResponderGrant: () => {
-        // Guardamos la ubicación exacta de la canasta al iniciar el toque
         startX.current = canastaXValue.current;
       },
-
       onPanResponderMove: (_, gestureState) => {
-        // Convertimos el desplazamiento físico del dedo (dx) a porcentaje de pantalla
         const desplazamiento = (gestureState.dx / SCREEN_WIDTH) * 100;
         let nuevoValor = startX.current + desplazamiento;
-
-        // Límites perfectos (0% es el extremo izquierdo, 100% el derecho)
         if (nuevoValor < 0) nuevoValor = 0;
         if (nuevoValor > 100) nuevoValor = 100;
-
-        // Actualización 1:1 inmediata
         canastaX.current.setValue(nuevoValor);
         canastaXValue.current = nuevoValor;
       },
-
-      onPanResponderRelease: () => {
-        // Eliminado __getValue() por completo para limpiar el error ts(2551)
-      },
+      onPanResponderRelease: () => {},
     })
   ).current;
 
@@ -67,41 +65,50 @@ export default function Juego() {
     return () => canastaX.current.removeAllListeners();
   }, []);
 
-  // 1. Cronómetro (Independiente)
+  // Cronómetro
   useEffect(() => {
     if (tiempo <= 0) return;
     const timer = setInterval(() => setTiempo((t) => t - 1), 1000);
     return () => clearInterval(timer);
   }, [tiempo]);
 
-  // 2. Generador de Frutas
+  // Generador de frutas
   useEffect(() => {
     if (tiempo <= 0) return;
 
     const generarFruta = () => {
-      const { intervalo, duracion } = obtenerConfiguracionDificultad();
-        
+      const { intervalo, duracion, margen } = obtenerConfiguracionDificultad();
+
+      // Posición X aleatoria separada de la anterior
       let newX = Math.random() * 80;
       if (Math.abs(newX - lastX.current) < 20) newX = newX > 50 ? newX - 25 : newX + 25;
       lastX.current = newX;
 
-      const id = Date.now();
+      // Fruta aleatoria
+      const emoji = FRUTAS_DISPONIBLES[Math.floor(Math.random() * FRUTAS_DISPONIBLES.length)];
+
+      const id = Date.now() + Math.random();
       const anim = new Animated.Value(0);
       let atrapada = false;
 
       anim.addListener(({ value }) => {
-        const margen = duracion < 2000 ? 35 : 20;
-        // Detección de colisión utilizando la escala unificada de 0 a 100
-        if (!atrapada && value > 85 && value < 95 && Math.abs(newX - canastaXValue.current) < margen) {
-          atrapada = true;
-          setPuntos(p => p + 1); // <-- SUMA UN ACIERTO AQUÍ
-          anim.stopAnimation();
-          frutasRef.current = frutasRef.current.filter(f => f.id !== id);
-          setTrigger(prev => prev + 1);
+        // Zona de captura: cuando la fruta está entre 78% y 88% de su caída
+        // (antes de llegar al fondo), comprobamos si la canasta está debajo
+        if (!atrapada && value >= 85 && value <= 90) {
+          const distancia = Math.abs(newX - canastaXValue.current);
+          if (distancia < margen) {
+            atrapada = true;
+            anim.stopAnimation();
+            // Eliminamos la fruta al instante
+            frutasRef.current = frutasRef.current.filter(f => f.id !== id);
+            setTrigger(prev => prev + 1);
+            setPuntos(p => p + 1);
+          }
         }
       });
 
-      frutasRef.current.push({ id, x: newX, emoji: "🍎", anim }); 
+      // Fruta aleatoria del array
+      frutasRef.current.push({ id, x: newX, emoji, anim });
       setTrigger(prev => prev + 1);
 
       Animated.timing(anim, {
@@ -111,7 +118,7 @@ export default function Juego() {
       }).start(({ finished }) => {
         if (finished && !atrapada) {
           frutasRef.current = frutasRef.current.filter(f => f.id !== id);
-          setFallos(f => f + 1); // <-- SÓLO SUMA UN FALLO AQUÍ (Ya no regala puntos)
+          setFallos(f => f + 1);
           setTrigger(prev => prev + 1);
         }
       });
@@ -126,45 +133,60 @@ export default function Juego() {
     };
   }, [puntos, tiempo]);
 
+  // Nivel visible para el jugador
+  const totalIntentos = puntos + fallos;
+  const nivelLabel =
+    totalIntentos > 22 ? "🔥 Difícil" :
+    totalIntentos > 12 ? "⚡ Medio" : "🌱 Fácil";
+
   return (
     <View style={styles.page}>
       <Stack.Screen options={{
         headerTitle: () => (
-          <View style={{ flexDirection: 'row', gap: 15 }}>
-            <Text style={{ color: 'blue', fontWeight: 'bold', fontSize: 18 }}>⏱️ {tiempo}s</Text>
-            <Text style={{ color: 'green', fontWeight: 'bold', fontSize: 18 }}>🍎 {puntos}</Text>
-            <Text style={{ color: 'red', fontWeight: 'bold', fontSize: 18 }}>❌ {fallos}</Text>
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+            <Text style={{ color: 'blue', fontWeight: 'bold', fontSize: 17 }}>⏱️ {tiempo}s</Text>
+            <Text style={{ color: 'green', fontWeight: 'bold', fontSize: 17 }}>🍎 {puntos}</Text>
+            <Text style={{ color: 'red', fontWeight: 'bold', fontSize: 17 }}>❌ {fallos}</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 13 }}>{nivelLabel}</Text>
           </View>
         )
       }} />
 
-      <View style={styles.zonaJuego}>
-  {/* Frutas */}
-  {frutasRef.current.map((f) => (
-    <Animated.Text key={f.id} style={[styles.fruta, {
-      top: f.anim.interpolate({ inputRange: [0, 100], outputRange: ["-10%", "110%"] }),
-      left: `${f.x}%`
-    }]}>{f.emoji}</Animated.Text>
-  ))}
+      <View style={[styles.zonaJuego, { position: "relative", flex: 1 }]}>
+        {/* Frutas cayendo */}
+        {frutasRef.current.map((f) => (
+          <Animated.Text key={f.id} style={[styles.fruta, {
+            top: f.anim.interpolate({ inputRange: [0, 100], outputRange: ["-10%", "110%"] }),
+            left: `${f.x}%`,
+            fontSize: 32,
+          }]}>
+            {f.emoji}
+          </Animated.Text>
+        ))}
 
-  {/* Asegúrate de usar Animated.Text en lugar de Animated.View */}
-<Animated.Text
-  {...panResponder.panHandlers}
-  style={[
-    styles.canasta,
-    {
-      transform: [{
-        translateX: canastaX.current.interpolate({
-          inputRange: [0, 100],
-          outputRange: [0, SCREEN_WIDTH - 80] 
-        })
-      }]
-    }
-  ]}
->
-  🧺
-</Animated.Text>
-</View>
+        {/* Canasta */}
+        <Animated.Text
+          {...panResponder.panHandlers}
+          style={[
+            styles.canasta,
+            {
+              position: 'absolute',
+              bottom: 20,
+              left: 0,
+              fontSize: 52,
+              zIndex: 10,
+              transform: [{
+                translateX: canastaX.current.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: [0, SCREEN_WIDTH - 80]
+                })
+              }]
+            }
+          ]}
+        >
+          🧺
+        </Animated.Text>
+      </View>
     </View>
   );
 }

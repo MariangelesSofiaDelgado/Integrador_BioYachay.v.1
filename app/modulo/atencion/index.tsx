@@ -1,12 +1,12 @@
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Animated,
+    Dimensions,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -198,7 +198,9 @@ function Paso3Demo() {
     { icono: "📈", texto: "Más aciertos = tablero más grande." },
     { icono: "⏱️", texto: "Tienes 60 segundos para jugar." },
   ];
-  const scales = [...niveles, ...reglas].map(() => useRef(new Animated.Value(0)).current);
+  const scales = useRef(
+    [...niveles, ...reglas].map(() => new Animated.Value(0))
+  ).current;
 
   useEffect(() => {
     scales.forEach((s, i) => {
@@ -206,7 +208,7 @@ function Paso3Demo() {
         Animated.spring(s, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
       }, i * 120);
     });
-  }, []);
+  }, [scales]);
 
   return (
     <View style={localS.demoWrap}>
@@ -278,7 +280,7 @@ function PantallaTutorial({ onCerrar }: { onCerrar: () => void }) {
         options={{
           headerShown: true,
           headerTitle: "",
-          headerStyle: { backgroundColor: "#337ab7" },
+          headerStyle: { backgroundColor: "#e93232" },
           headerTintColor: "#ffffff",
           headerShadowVisible: false,
         }}

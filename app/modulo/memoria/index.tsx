@@ -282,7 +282,7 @@ function Paso3Demo() {
     { label: "Nivel 4", cartas: 12, color: "#f472b6" },
     { label: "Nivel 5", cartas: 16, color: "#fb923c" },
   ];
-  const scales = niveles.map(() => useRef(new Animated.Value(0)).current);
+  const scales = useRef(niveles.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     niveles.forEach((_, i) => {
@@ -290,7 +290,7 @@ function Paso3Demo() {
         Animated.spring(scales[i], { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
       }, i * 150);
     });
-  }, []);
+  }, [scales]);
 
   return (
     <View style={Sc.demoWrap}>
