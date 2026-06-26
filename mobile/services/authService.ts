@@ -1,6 +1,5 @@
 
-const BASE_URL = "https://armchair-famine-wrought.ngrok-free.dev/api";
-
+const BASE_URL = "https://tributary-snowboard-dividable.ngrok-free.dev";
 export interface AuthUser {
   token: string;
   id: number;

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth") // <-- Corregido: Se quitó el "/api" para que coincida con la app móvil y ngrok
 @CrossOrigin(origins = "*")
 public class AuthController {
 
@@ -22,7 +22,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // POST /api/auth/register
+    // POST /auth/register
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -33,7 +33,7 @@ public class AuthController {
         }
     }
 
-    // POST /api/auth/login
+    // POST /auth/login
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
