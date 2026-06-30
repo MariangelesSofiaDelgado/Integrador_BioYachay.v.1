@@ -1,9 +1,9 @@
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { crearEstilosModulo } from "../styleModuloBase";
+import { yaVioTutorial, reiniciarTutorial } from "@/services/tutorialStorage";
 
 const COLOR = "#3486e3";
 const COLOR_DARK = "#0e57b0";
@@ -27,8 +27,6 @@ function PreviewMemoria() {
   return (
     <View style={S.previewContainer}>
       <View style={S.previewCard}>
-        {/* Fondo tintado */}
-
         <View style={{
           position: "absolute", top: 10, left: 0, right: 0,
           alignItems: "center",
@@ -38,7 +36,6 @@ function PreviewMemoria() {
           </Text>
         </View>
 
-        {/* Grid 3×3 */}
         <View style={{ flexDirection: "row", flexWrap: "wrap", width: 132, gap: 4, marginTop: 20 }}>
           {GRID.map((c, i) => (
             <View key={i} style={{
@@ -57,7 +54,6 @@ function PreviewMemoria() {
           ))}
         </View>
 
-        {/* Chip de par encontrado */}
         <View style={{
           position: "absolute", bottom: 10,
           backgroundColor: "#f0fff4", borderRadius: 99,
@@ -77,11 +73,19 @@ function PreviewMemoria() {
 export default function MenuMemoria() {
   const router = useRouter();
 
+  const handleIniciar = async () => {
+    const yaVisto = await yaVioTutorial("memoria");
+    if (yaVisto) {
+      router.push("/modulo/memoria/juego");
+    } else {
+      router.push("/modulo/memoria/tutorial");
+    }
+  };
+
   return (
     <View style={S.page}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* ── Zona superior ── */}
       <View style={S.zonaSuperior}>
         <View style={S.tituloWrapper}>
           <Text style={S.titulo}>Memoria</Text>
@@ -90,9 +94,7 @@ export default function MenuMemoria() {
         <PreviewMemoria />
       </View>
 
-      {/* ── Tarjeta blanca ── */}
       <View style={S.tarjeta}>
-        {/* Objetivo */}
         <View style={S.filaHeader}>
           <View style={S.tagObjetivo}>
             <Text style={S.tagObjetivoTexto}>Objetivo</Text>
@@ -106,7 +108,6 @@ export default function MenuMemoria() {
           </Text>
         </View>
 
-        {/* Instrucciones */}
         <View style={S.instruccionesTag}>
           <Text style={S.instruccionesTagTexto}>Instrucciones</Text>
         </View>
@@ -117,17 +118,17 @@ export default function MenuMemoria() {
           <Text style={S.instruccionLinea}>⏱️ ¡Completa todos los pares a tiempo!</Text>
         </View>
 
-        {/* Botón único */}
         <View style={S.filaBotones}>
-
           <Pressable
             style={S.botonIniciar}
-            onPress={() => router.push("/modulo/memoria/juego")}
+            onPress={handleIniciar}
           >
             <Text style={S.textoBoton}>Iniciar</Text>
           </Pressable>
+          <Pressable onPress={() => reiniciarTutorial("memoria")}>
+            <Text>🔄 Reiniciar tutorial</Text>
+          </Pressable>
         </View>
-
       </View>
     </View>
   );

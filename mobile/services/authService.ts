@@ -1,5 +1,5 @@
 
-const BASE_URL = "https://tributary-snowboard-dividable.ngrok-free.dev";
+const BASE_URL = "https://pungent-spirits-shrank.ngrok-free.dev";
 export interface AuthUser {
   token: string;
   id: number;
