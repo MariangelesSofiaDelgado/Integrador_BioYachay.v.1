@@ -1,24 +1,23 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
-import React from "react";
+import { Stack, useRouter, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { crearEstilosModulo } from "../styleModuloBase";
+import { TUTORIAL_ATENCION_KEY } from "../atencion/tutorial";
 
 const COLOR      = "#e74c3c";
 const COLOR_DARK = "#a93226";
 
 const S = crearEstilosModulo(COLOR, COLOR_DARK);
 
-// ─── Preview estático ─────────────────────────────────────────────────────────
-const OBJETIVO = "🍎";
+const OBJETIVO    = "🍎";
 const GRID_EMOJIS = ["🍊", "🍌", "🍇", "🍓", "🍎", "🥝", "🍑", "🍒", "🍈"];
 
 function PreviewAtencion() {
   return (
     <View style={S.previewContainer}>
       <View style={S.previewCard}>
-
-        {/* Etiqueta objetivo */}
         <View style={{
           backgroundColor: "#fff",
           borderRadius: 10,
@@ -32,7 +31,6 @@ function PreviewAtencion() {
           <Text style={{ fontSize: 26 }}>{OBJETIVO}</Text>
         </View>
 
-        {/* Grid 3×3 */}
         <View style={{ flexDirection: "row", flexWrap: "wrap", width: 138, gap: 4 }}>
           {GRID_EMOJIS.map((emoji, i) => {
             const esObjetivo = emoji === OBJETIVO;
@@ -55,15 +53,40 @@ function PreviewAtencion() {
   );
 }
 
-// ─── Pantalla principal ───────────────────────────────────────────────────────
 export default function MenuAtencion() {
   const router = useRouter();
+  const [tutorialVisto, setTutorialVisto] = useState<boolean | null>(null);
+
+  // Se re-ejecuta cada vez que esta pantalla vuelve al foco
+  // (ej: después de volver del juego o del tutorial)
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(TUTORIAL_ATENCION_KEY).then((val) => {
+        setTutorialVisto(val === "1");
+      });
+    }, [])
+  );
+
+  const handleJugar = () => {
+    if (tutorialVisto) {
+      router.push("/modulo/atencion/juego");
+    } else {
+      router.push("/modulo/atencion/tutorial");
+    }
+  };
+
+  const handleReiniciarTutorial = async () => {
+    await AsyncStorage.removeItem(TUTORIAL_ATENCION_KEY);
+    setTutorialVisto(false);
+    router.push("/modulo/atencion/tutorial");
+  };
+
+  if (tutorialVisto === null) return null;
 
   return (
     <View style={S.page}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* ── Zona superior ── */}
       <View style={S.zonaSuperior}>
         <View style={S.tituloWrapper}>
           <Text style={S.titulo}>Atención</Text>
@@ -72,7 +95,6 @@ export default function MenuAtencion() {
         <PreviewAtencion />
       </View>
 
-      {/* ── Tarjeta blanca ── */}
       <View style={S.tarjeta}>
         <View style={S.filaHeader}>
           <View style={S.tagObjetivo}>
@@ -98,17 +120,19 @@ export default function MenuAtencion() {
         </View>
 
         <View style={S.filaBotones}>
-          <Pressable
-            style={S.botonTutorial}
-            onPress={() => router.push("/modulo/atencion/tutorial")}
-          >
-            <Text style={S.textoBoton}>Tutorial</Text>
-          </Pressable>
-          <Pressable
-            style={S.botonIniciar}
-            onPress={() => router.push("/modulo/atencion/juego")}
-          >
-            <Text style={S.textoBoton}>Iniciar</Text>
+          {/* Reiniciar tutorial — solo visible después de haber jugado por primera vez */}
+          {tutorialVisto && (
+            <Pressable style={S.botonIniciar} onPress={handleReiniciarTutorial}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <MaterialCommunityIcons name="refresh" size={18} color="#fff" />
+                <Text style={S.textoBoton}>Reiniciar tutorial</Text>
+              </View>
+            </Pressable>
+          )}
+
+          {/* Botón principal — siempre visible */}
+          <Pressable style={S.botonIniciar} onPress={handleJugar}>
+            <Text style={S.textoBoton}>Jugar</Text>
           </Pressable>
         </View>
       </View>
