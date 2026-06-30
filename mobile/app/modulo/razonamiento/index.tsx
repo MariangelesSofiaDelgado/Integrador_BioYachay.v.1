@@ -101,5 +101,58 @@ export default function MenuRazonamiento() {
       router.push("/modulo/razonamiento/tutorial");
     }
   };
-  
+
+  return (
+    <View style={S.page}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* ── Zona superior ── */}
+      <View style={S.zonaSuperior}>
+        <View style={S.tituloWrapper}>
+          <Text style={S.titulo}>Razonamiento</Text>
+          <View style={S.tituloLinea} />
+        </View>
+        <PreviewRazonamiento />
+      </View>
+
+      {/* ── Tarjeta blanca ── */}
+      <View style={S.tarjeta}>
+        <View style={S.filaHeader}>
+          <View style={S.tagObjetivo}>
+            <Text style={S.tagObjetivoTexto}>Objetivo</Text>
+          </View>
+          <MaterialCommunityIcons name="puzzle" size={40} color={COLOR} />
+        </View>
+
+        <View style={S.descripcionBox}>
+          <Text style={S.descripcionTexto}>
+            Selecciona fichas que sumen exactamente el número objetivo.
+          </Text>
+        </View>
+
+        <View style={S.instruccionesTag}>
+          <Text style={S.instruccionesTagTexto}>Instrucciones</Text>
+        </View>
+
+        <View style={S.instruccionesLista}>
+          <Text style={S.instruccionLinea}>🎯 Observa el número objetivo en el círculo.</Text>
+          <Text style={S.instruccionLinea}>🔢 Toca fichas para sumar exactamente ese número.</Text>
+          <Text style={S.instruccionLinea}>⏱️ ¡Haz el mayor número de aciertos a tiempo!</Text>
+        </View>
+
+        {/* Botón único */}
+        <View style={S.filaBotones}>
+          <Pressable
+            style={S.botonIniciar}
+            onPress={handleIniciar}
+          >
+            <Text style={S.textoBoton}>Iniciar</Text>
+          </Pressable>
+          <Pressable onPress={() => reiniciarTutorial("razonamiento")}>
+            <Text>🔄 Reiniciar tutorial</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
 }
