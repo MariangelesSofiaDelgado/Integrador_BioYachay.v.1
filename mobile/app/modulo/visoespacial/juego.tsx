@@ -33,11 +33,9 @@ function RenderFigura({ tipo, size = 62 }: { tipo: ShapeType; size?: number }) {
       borderRadius: 4, transform: [{ rotate: "45deg" }] }} />
   );
   if (tipo === "rectangulo") return (
-    // Rectángulo apaisado - claramente distinto al rombo y triángulo
     <View style={{ width: size * 1.5, height: size * 0.65, backgroundColor: color, borderRadius: 8 }} />
   );
   if (tipo === "hexagono") return (
-    // Hexágono simulado: círculo achatado con bordes
     <View style={{ width: size, height: size * 0.87, backgroundColor: color, borderRadius: size * 0.25 }} />
   );
   if (tipo === "manzana") return (
@@ -103,6 +101,9 @@ interface Molde {
   cy: number;
 }
 
+// Estado de feedback visual por figura: null | "acierto" | "fallo"
+type FeedbackState = "acierto" | "fallo" | null;
+
 let uid = 1;
 const nid = () => uid++;
 
@@ -126,7 +127,6 @@ function generarRonda(aciertos: number) {
   const items: { tipo: ShapeType; tieneMolde: boolean }[] = [
     ...formasMoldes.map(t => ({ tipo: t, tieneMolde: true })),
   ];
-  // Figuras trampa: tipos únicos que no se repiten con nada
   const trampasUsadas = new Set<ShapeType>(formasMoldes);
   for (let i = formasMoldes.length; i < nFigs; i++) {
     const disponible = tiposTrampa.find(t => !trampasUsadas.has(t));
@@ -153,21 +153,105 @@ function generarRonda(aciertos: number) {
   return { figuras, moldes };
 }
 
+// ── Componente figura arrastrable con feedback visual ─────────────────────────
+function FiguraArrastrable({
+  fig,
+  panHandlers,
+  feedback,
+}: {
+  fig: Figura;
+  panHandlers: any;
+  feedback: FeedbackState;
+}) {
+  const escala     = useRef(new Animated.Value(1)).current;
+  const bordeOp    = useRef(new Animated.Value(0)).current;
+  const bordeColor = useRef(new Animated.Value(0)).current; // 0=verde 1=rojo
+  const prevFeedback = useRef<FeedbackState>(null);
+
+  useEffect(() => {
+    if (feedback === prevFeedback.current) return;
+    prevFeedback.current = feedback;
+
+    if (feedback === "acierto") {
+      bordeColor.setValue(0); // verde
+      // Pulso: crece y encoge
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(escala,  { toValue: 1.35, duration: 120, useNativeDriver: true }),
+          Animated.timing(bordeOp, { toValue: 1,    duration: 80,  useNativeDriver: true }),
+        ]),
+        Animated.timing(escala, { toValue: 0.9,  duration: 90,  useNativeDriver: true }),
+        Animated.timing(escala, { toValue: 1.1,  duration: 80,  useNativeDriver: true }),
+        Animated.timing(escala, { toValue: 1,    duration: 60,  useNativeDriver: true }),
+        Animated.delay(200),
+        Animated.timing(bordeOp, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
+
+    if (feedback === "fallo") {
+      bordeColor.setValue(1); // rojo
+      // Shake: izquierda-derecha rápido + borde rojo
+      Animated.sequence([
+        Animated.timing(bordeOp, { toValue: 1,    duration: 60,  useNativeDriver: true }),
+        Animated.timing(escala,  { toValue: 0.88, duration: 60,  useNativeDriver: true }),
+        Animated.timing(escala,  { toValue: 1.08, duration: 60,  useNativeDriver: true }),
+        Animated.timing(escala,  { toValue: 0.94, duration: 50,  useNativeDriver: true }),
+        Animated.timing(escala,  { toValue: 1,    duration: 50,  useNativeDriver: true }),
+        Animated.delay(200),
+        Animated.timing(bordeOp, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [feedback]);
+
+  // Color del borde interpolado
+  const borderColorInterp = bordeColor.interpolate({
+    inputRange:  [0, 1],
+    outputRange: ["#22c55e", "#ef4444"],
+  });
+
+  return (
+    <Animated.View
+      {...panHandlers}
+      style={{
+        position: "absolute",
+        left: fig.pan.x,
+        top:  fig.pan.y,
+        zIndex: 999,
+        opacity: fig.encajada ? 0 : 1,
+        padding: 8,
+        transform: [{ scale: escala }],
+      }}
+    >
+      {/* Borde de feedback que aparece y desaparece */}
+      <Animated.View style={{
+        position: "absolute",
+        top: 0, left: 0, right: 0, bottom: 0,
+        borderRadius: 12,
+        borderWidth: 3,
+        borderColor: borderColorInterp,
+        opacity: bordeOp,
+      }} />
+      <RenderFigura tipo={fig.tipo} size={48} />
+    </Animated.View>
+  );
+}
+
 export default function JuegoFiguras() {
   const router = useRouter();
-  const [aciertos, setAciertos] = useState(0);
-  const [fallos,   setFallos]   = useState(0);
-  const [tiempo,   setTiempo]   = useState(60);
+  const [aciertos,  setAciertos]  = useState(0);
+  const [fallos,    setFallos]    = useState(0);
+  const [tiempo,    setTiempo]    = useState(60);
   const [terminado, setTerminado] = useState(false);
-  const [figuras,  setFiguras]  = useState<Figura[]>([]);
-  const [moldes,   setMoldes]   = useState<Molde[]>([]);
+  const [figuras,   setFiguras]   = useState<Figura[]>([]);
+  const [moldes,    setMoldes]    = useState<Molde[]>([]);
+
+  // feedback por figura id
+  const [feedbacks, setFeedbacks] = useState<Record<number, FeedbackState>>({});
 
   const aciertosRef = useRef(0);
   const figurasRef  = useRef<Figura[]>([]);
   const moldesRef   = useRef<Molde[]>([]);
   const prs         = useRef<{ [id: number]: any }>({});
-
-  // Posición Y absoluta donde empiezan los moldes (top del View raíz + zonaFiguras.height + divisor)
   const moldesOffsetY = useRef(0);
 
   useEffect(() => { aciertosRef.current = aciertos; }, [aciertos]);
@@ -193,6 +277,7 @@ export default function JuegoFiguras() {
     moldesRef.current  = m;
     setFiguras([...f]);
     setMoldes([...m]);
+    setFeedbacks({});
   }, []);
 
   useEffect(() => { iniciarRonda(0); }, []);
@@ -202,6 +287,14 @@ export default function JuegoFiguras() {
       iniciarRonda(aciertosRef.current);
     }
   }, [iniciarRonda]);
+
+  // Disparar feedback y limpiarlo después de la animación
+  const dispararFeedback = useCallback((figId: number, tipo: FeedbackState) => {
+    setFeedbacks(prev => ({ ...prev, [figId]: tipo }));
+    setTimeout(() => {
+      setFeedbacks(prev => ({ ...prev, [figId]: null }));
+    }, 600);
+  }, []);
 
   const crearPR = useCallback((figId: number) => {
     const base = { x: 0, y: 0 };
@@ -226,7 +319,7 @@ export default function JuegoFiguras() {
         const fig = figurasRef.current.find(f => f.id === figId);
         if (!fig || fig.encajada) return;
 
-        const fx = base.x + gs.dx + 39; // mitad de figura (62/2 + padding 8)
+        const fx = base.x + gs.dx + 39;
         const fy = base.y + gs.dy + 39;
         const SNAP = 65;
 
@@ -240,8 +333,10 @@ export default function JuegoFiguras() {
 
         if (mejor && menorDist < SNAP) {
           if (fig.tipo === mejor.tipo) {
+            // ✅ Acierto
             fig.encajada = true;
             mejor.ocupado = true;
+            dispararFeedback(figId, "acierto");
             Animated.spring(fig.pan, {
               toValue: { x: mejor.cx - 39, y: mejor.cy - 39 },
               useNativeDriver: false, speed: 25, bounciness: 8,
@@ -251,6 +346,8 @@ export default function JuegoFiguras() {
             setFiguras([...figurasRef.current]);
             setTimeout(verificarFin, 300);
           } else {
+            // ❌ Fallo en molde equivocado
+            dispararFeedback(figId, "fallo");
             setFallos(f => f + 1);
             Animated.spring(fig.pan, {
               toValue: { x: fig.inicioX, y: fig.inicioY },
@@ -258,6 +355,7 @@ export default function JuegoFiguras() {
             }).start();
           }
         } else {
+          // Soltó lejos de cualquier molde — vuelve sin feedback
           Animated.spring(fig.pan, {
             toValue: { x: fig.inicioX, y: fig.inicioY },
             useNativeDriver: false, speed: 14,
@@ -265,11 +363,8 @@ export default function JuegoFiguras() {
         }
       },
     });
-  }, [verificarFin]);
+  }, [verificarFin, dispararFeedback]);
 
-
-
-  // Crear panResponders cuando cambian las figuras (sin delay extra)
   useEffect(() => {
     figuras.forEach(f => {
       if (!prs.current[f.id]) prs.current[f.id] = crearPR(f.id);
@@ -307,12 +402,10 @@ export default function JuegoFiguras() {
         headerShadowVisible: false,
       }} />
 
-      {/* Zona superior azul */}
       <View
         style={styles.zonaFiguras}
         onLayout={e => {
-          // Guardamos dónde termina esta zona (y + height) = donde empieza zonaMoldes
-          moldesOffsetY.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height + 3; // +3 del divisor
+          moldesOffsetY.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height + 3;
         }}
       >
         <Text style={styles.instruccion}>Arrastra cada figura a su molde</Text>
@@ -320,7 +413,6 @@ export default function JuegoFiguras() {
 
       <View style={styles.divisor} />
 
-      {/* Zona moldes */}
       <View style={styles.zonaMoldes}>
         <Text style={styles.instruccionMolde}>
           {figuras.filter(f => !f.tieneMolde).length > 0
@@ -334,16 +426,13 @@ export default function JuegoFiguras() {
               style={[styles.moldeWrapper, molde.ocupado && styles.moldeOcupado]}
               onLayout={e => {
                 const { x, y, width, height } = e.nativeEvent.layout;
-                // x,y son relativos al moldesRow
-                // El centro absoluto = offsetY de zona moldes + padding(16) + label(~34) + y local + height/2
-                // Para X: el moldesRow está centrado, calculamos su offset sumando padding horizontal
-                  const labelH = 34;
-                  const paddingTop = 16;
-                  const paddingH = 12;
-                  const rowWidth = moldes.length * (72 + 20) - 20;
-                  const rowOffsetX = (SW - rowWidth) / 2;
-                  molde.cx = rowOffsetX + paddingH + x + width / 2;
-                  molde.cy = moldesOffsetY.current + paddingTop + labelH + y + height / 2;
+                const labelH   = 34;
+                const paddingTop = 16;
+                const paddingH = 12;
+                const rowWidth = moldes.length * (72 + 20) - 20;
+                const rowOffsetX = (SW - rowWidth) / 2;
+                molde.cx = rowOffsetX + paddingH + x + width / 2;
+                molde.cy = moldesOffsetY.current + paddingTop + labelH + y + height / 2;
               }}
             >
               {molde.ocupado
@@ -354,24 +443,16 @@ export default function JuegoFiguras() {
         </View>
       </View>
 
-      {/* Figuras arrastrables encima de todo */}
+      {/* Figuras arrastrables con feedback */}
       {figuras.map(fig => {
         const pr = prs.current[fig.id];
         return (
-          <Animated.View
+          <FiguraArrastrable
             key={fig.id}
-            {...(pr ? pr.panHandlers : {})}
-            style={{
-              position: "absolute",
-              left: fig.pan.x,
-              top: fig.pan.y,
-              zIndex: 999,
-              opacity: fig.encajada ? 0 : 1,
-              padding: 8,
-            }}
-          >
-            <RenderFigura tipo={fig.tipo} size={48} />
-          </Animated.View>
+            fig={fig}
+            panHandlers={pr ? pr.panHandlers : {}}
+            feedback={feedbacks[fig.id] ?? null}
+          />
         );
       })}
     </View>

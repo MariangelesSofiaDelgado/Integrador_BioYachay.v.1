@@ -133,7 +133,7 @@ export default function MenuVisoespacial() {
 
         <View style={S.filaBotones}>
           <Pressable
-            style={S.botonTutorial}
+            style={S.botonIniciar}
             onPress={() => router.push("/modulo/visoespacial/tutorial")}
           >
             <Text style={S.textoBoton}>Tutorial</Text>
